@@ -68,8 +68,8 @@ if (isPost($_SERVER)) {
 
         if (($_POST['form_type'] ?? '') === 'exit') {
             $exitTime = $visitService->registerExit($_POST);
-            $successMessage = 'Arrivederci! Uscita registrata correttamente.';
-            $exitGreeting = 'Grazie per la visita e buona giornata!';
+            $successMessage = 'Arrivederci! Uscita registrata correttamente. Grazie per la visita e buona giornata!';
+            $exitGreeting = '';
         }
     } catch (\InvalidArgumentException $e) {
         $errors[] = $e->getMessage();
@@ -145,8 +145,8 @@ if ($view === 'audit' && $canViewAudit) {
     <title>Controllo Accessi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; }
-        .theme-dark { --bg: #0d1117; --text: #e6e6e6; --muted: #c0c5cc; --card: #111820; --border: rgba(255,255,255,0.08); --accent: #10a37f; --accent-2: #7dd3fc; --canvas: #0b0f15; }
+        :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; --table-bg: #ffffff; --table-alt: #f1f5f9; }
+        .theme-dark { --bg: #0d1117; --text: #f1f5f9; --muted: #cfd6df; --card: #0f1722; --border: rgba(255,255,255,0.1); --accent: #10a37f; --accent-2: #7dd3fc; --canvas: #0b0f15; --table-bg: #111927; --table-alt: #162235; }
         body { background: radial-gradient(circle at 20% 20%, rgba(16,163,127,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(125,211,252,0.08), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
         .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
         .hero { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,197,94,0.08)); padding: 28px; display: flex; align-items: center; gap: 16px; }
@@ -156,9 +156,9 @@ if ($view === 'audit' && $canViewAudit) {
         .form-label { color: var(--muted); }
         .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; }
         .btn-success { background: linear-gradient(135deg, #10b981, #059669); border: none; }
-        .table { color: var(--text); }
-        .table thead th { border-color: var(--border); }
-        .table td, .table th { border-color: var(--border); }
+        .table-modern { color: var(--text); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: rgba(255,255,255,0.05); --bs-table-border-color: var(--border); }
+        .table-modern thead th { background: var(--table-alt); color: var(--text); }
+        .table-modern td, .table-modern th { border-color: var(--border); }
         canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); touch-action: none; }
         .badge-pill { border-radius: 30px; padding: 8px 14px; }
     </style>
@@ -267,7 +267,7 @@ if ($view === 'audit' && $canViewAudit) {
                                 <div class="text-muted">Nessun visitatore presente al momento.</div>
                             <?php else: ?>
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
+                                    <table class="table table-hover align-middle mb-0 table-modern">
                                         <thead>
                                             <tr>
                                                 <th>Nome</th>
@@ -331,7 +331,7 @@ if ($view === 'audit' && $canViewAudit) {
                         </div>
                     </form>
                     <div class="table-responsive" style="max-height: 320px;">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0 table-modern">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
@@ -377,7 +377,7 @@ if ($view === 'audit' && $canViewAudit) {
                         <span class="badge bg-info bg-gradient badge-pill">Solo Admin</span>
                     </div>
                     <div class="table-responsive" style="max-height: 260px;">
-                        <table class="table table-striped align-middle mb-0">
+                        <table class="table table-striped align-middle mb-0 table-modern">
                             <thead>
                                 <tr>
                                     <th>Data</th>
