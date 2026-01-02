@@ -145,28 +145,88 @@ if ($view === 'audit' && $canViewAudit) {
     <title>Controllo Accessi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; --table-bg: #ffffff; --table-alt: #f1f5f9; }
-        .theme-dark { --bg: #0d1117; --text: #f2f4f8; --muted: #d6dde6; --card: #0f1722; --border: rgba(255,255,255,0.15); --accent: #7aa5f7; --accent-2: #8ad2ff; --canvas: #0b0f15; --table-bg: #111927; --table-alt: #162235; }
-        body { background: radial-gradient(circle at 20% 20%, rgba(16,163,127,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(125,211,252,0.08), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
-        .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
-        .hero { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,197,94,0.08)); padding: 28px; display: flex; align-items: center; gap: 16px; }
-        .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: linear-gradient(135deg, #7dd3fc, #34d399); display: grid; place-items: center; color: #0b1220; font-weight: 800; font-size: 22px; box-shadow: 0 10px 30px rgba(52,211,153,0.35); }
+        :root {
+            --color-background: #FFFFFF;
+            --color-surface: #E5E7EB;
+            --color-surface-secondary: #FAFBFB;
+            --color-text-primary: #000000;
+            --color-text-secondary: #374151;
+            --color-text-muted: #6B7280;
+            --color-border: #C1C1C1;
+            --color-primary: #0476F4;
+            --color-success: #33E1A1;
+            --color-error: #E90A07;
+            --color-disabled: #D1D5DB;
+            --bg: var(--color-background);
+            --text: var(--color-text-primary);
+            --muted: var(--color-text-muted);
+            --card: var(--color-surface-secondary);
+            --border: var(--color-border);
+            --accent: var(--color-primary);
+            --accent-2: var(--color-success);
+            --canvas: var(--color-surface-secondary);
+            --table-bg: var(--color-surface-secondary);
+            --table-alt: var(--color-surface);
+        }
+        .theme-light {
+            --color-background: #FFFFFF;
+            --color-surface: #E5E7EB;
+            --color-surface-secondary: #FAFBFB;
+            --color-text-primary: #000000;
+            --color-text-secondary: #374151;
+            --color-text-muted: #6B7280;
+            --color-border: #C1C1C1;
+            --color-primary: #0476F4;
+            --color-success: #33E1A1;
+            --color-error: #E90A07;
+            --color-disabled: #D1D5DB;
+        }
+        .theme-dark {
+            --color-background: #101212;
+            --color-surface: #111827;
+            --color-surface-secondary: #101212;
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: #D1D5DB;
+            --color-text-muted: #6B7280;
+            --color-border: #374151;
+            --color-primary: #0476F4;
+            --color-success: #33E1A1;
+            --color-error: #E90A07;
+            --color-disabled: #374151;
+        }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        a { color: var(--color-primary); }
+        .app-shell { background: var(--card); box-shadow: 0 20px 60px var(--border); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .hero { background: var(--color-surface); padding: 28px; display: flex; align-items: center; gap: 16px; }
+        .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: var(--color-primary); display: grid; place-items: center; color: #FFFFFF; font-weight: 800; font-size: 22px; box-shadow: 0 0 0 1px var(--border); }
         .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; height: 100%; }
         .section-card h5 { color: var(--accent); letter-spacing: 0.2px; margin-bottom: 12px; }
-        .form-label { color: var(--muted); }
-        .btn-primary { background: linear-gradient(135deg, #7aa5f7, #4f7aca); border: none; color: #0b1220; }
-        .btn-success { background: linear-gradient(135deg, #10b981, #059669); border: none; }
-        .theme-dark .btn-primary { background: linear-gradient(135deg, #9bbafc, #6f8fcf); border: none; color: #0b1220; }
-        .theme-dark .btn-outline-primary { color: #e4e9f2; border-color: #6f8fcf; }
-        .theme-dark .btn-outline-primary:hover { background: #6f8fcf; color: #0b1220; }
-        .table-modern { color: var(--text); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: rgba(255,255,255,0.05); --bs-table-border-color: var(--border); }
+        .form-label { color: var(--color-text-secondary); }
+        .btn-primary, .btn-primary:focus, .btn-primary:active, .btn-primary:hover { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
+        .btn-success, .btn-success:focus, .btn-success:active, .btn-success:hover { background: var(--color-success); border-color: var(--color-success); color: #000000; }
+        .btn-outline-primary, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary:hover { color: var(--color-primary); border-color: var(--color-primary); background: transparent; }
+        .btn-outline-secondary, .btn-outline-secondary:focus, .btn-outline-secondary:active, .btn-outline-secondary:hover { color: var(--color-text-secondary); border-color: var(--color-border); background: transparent; }
+        .btn-outline-success, .btn-outline-success:focus, .btn-outline-success:active, .btn-outline-success:hover { color: var(--color-success); border-color: var(--color-success); background: transparent; }
+        .btn:disabled, .btn.disabled { background: var(--color-disabled) !important; border-color: var(--color-disabled) !important; color: var(--color-text-secondary) !important; }
+        .table-modern { color: var(--text); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: var(--table-alt); --bs-table-border-color: var(--border); }
         .table-modern thead th { background: var(--table-alt); color: var(--text); }
         .table-modern td, .table-modern th { border-color: var(--border); }
         canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); touch-action: none; }
         .badge-pill { border-radius: 30px; padding: 8px 14px; }
+        .badge.bg-success { background: var(--color-success) !important; color: #000000; }
+        .badge.bg-primary { background: var(--color-primary) !important; color: #FFFFFF; }
+        .badge.bg-secondary { background: var(--color-text-secondary) !important; color: #FFFFFF; }
+        .badge.bg-info { background: var(--color-primary) !important; color: #FFFFFF; }
+        .bg-gradient { background-image: none !important; }
         .text-muted { color: var(--muted) !important; }
         .modal-content { background: var(--card); color: var(--text); border: 1px solid var(--border); }
         .modal-header, .modal-footer { border-color: var(--border); }
+        .border-secondary { border-color: var(--border) !important; }
+        .alert { background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+        .alert-danger { background: var(--color-error); border-color: var(--color-error); color: #FFFFFF; }
+        .alert-success { background: var(--color-success); border-color: var(--color-success); color: #000000; }
+        .alert-info { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
+        .alert-warning { background: var(--color-border); border-color: var(--color-border); color: var(--color-text-primary); }
     </style>
 </head>
 <body>
@@ -452,8 +512,12 @@ if ($view === 'audit' && $canViewAudit) {
 <script>
     const entryCanvas = document.getElementById('entrySignature');
     const exitCanvas = document.getElementById('exitSignature');
-    const entryPad = new SignaturePad(entryCanvas, { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--canvas'), penColor: '#22c55e' });
-    const exitPad = new SignaturePad(exitCanvas, { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--canvas'), penColor: '#2563eb' });
+    const computedStyles = getComputedStyle(document.documentElement);
+    const canvasColor = computedStyles.getPropertyValue('--canvas');
+    const successColor = computedStyles.getPropertyValue('--color-success');
+    const primaryColor = computedStyles.getPropertyValue('--color-primary');
+    const entryPad = new SignaturePad(entryCanvas, { backgroundColor: canvasColor, penColor: successColor });
+    const exitPad = new SignaturePad(exitCanvas, { backgroundColor: canvasColor, penColor: primaryColor });
 
     function resizeCanvas(canvas, signaturePad, preserveData = false) {
         const existing = preserveData ? signaturePad.toData() : [];
