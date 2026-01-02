@@ -209,7 +209,9 @@ if ($view === 'audit' && $canViewAudit) {
         .btn-outline-success, .btn-outline-success:focus, .btn-outline-success:active, .btn-outline-success:hover { color: var(--color-success); border-color: var(--color-success); background: transparent; }
         .btn:disabled, .btn.disabled { background: var(--color-disabled) !important; border-color: var(--color-disabled) !important; color: var(--color-text-secondary) !important; }
         .table-modern { color: var(--text); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: var(--table-alt); --bs-table-border-color: var(--border); }
+        .theme-dark .table-modern { color: var(--color-text-secondary); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: var(--table-alt); --bs-table-border-color: var(--border); }
         .table-modern thead th { background: var(--table-alt); color: var(--text); }
+        .theme-dark .table-modern thead th { color: var(--color-text-secondary); }
         .table-modern td, .table-modern th { border-color: var(--border); }
         canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); touch-action: none; }
         .badge-pill { border-radius: 30px; padding: 8px 14px; }
