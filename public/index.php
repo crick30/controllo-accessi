@@ -146,7 +146,7 @@ if ($view === 'audit' && $canViewAudit) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; --table-bg: #ffffff; --table-alt: #f1f5f9; }
-        .theme-dark { --bg: #0d1117; --text: #f1f5f9; --muted: #cfd6df; --card: #0f1722; --border: rgba(255,255,255,0.1); --accent: #10a37f; --accent-2: #7dd3fc; --canvas: #0b0f15; --table-bg: #111927; --table-alt: #162235; }
+        .theme-dark { --bg: #0d1117; --text: #f2f4f8; --muted: #d6dde6; --card: #0f1722; --border: rgba(255,255,255,0.15); --accent: #7aa5f7; --accent-2: #8ad2ff; --canvas: #0b0f15; --table-bg: #111927; --table-alt: #162235; }
         body { background: radial-gradient(circle at 20% 20%, rgba(16,163,127,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(125,211,252,0.08), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
         .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
         .hero { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,197,94,0.08)); padding: 28px; display: flex; align-items: center; gap: 16px; }
@@ -154,13 +154,19 @@ if ($view === 'audit' && $canViewAudit) {
         .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; height: 100%; }
         .section-card h5 { color: var(--accent); letter-spacing: 0.2px; margin-bottom: 12px; }
         .form-label { color: var(--muted); }
-        .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; }
+        .btn-primary { background: linear-gradient(135deg, #7aa5f7, #4f7aca); border: none; color: #0b1220; }
         .btn-success { background: linear-gradient(135deg, #10b981, #059669); border: none; }
+        .theme-dark .btn-primary { background: linear-gradient(135deg, #9bbafc, #6f8fcf); border: none; color: #0b1220; }
+        .theme-dark .btn-outline-primary { color: #e4e9f2; border-color: #6f8fcf; }
+        .theme-dark .btn-outline-primary:hover { background: #6f8fcf; color: #0b1220; }
         .table-modern { color: var(--text); --bs-table-bg: var(--table-bg); --bs-table-striped-bg: var(--table-alt); --bs-table-hover-bg: rgba(255,255,255,0.05); --bs-table-border-color: var(--border); }
         .table-modern thead th { background: var(--table-alt); color: var(--text); }
         .table-modern td, .table-modern th { border-color: var(--border); }
         canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); touch-action: none; }
         .badge-pill { border-radius: 30px; padding: 8px 14px; }
+        .text-muted { color: var(--muted) !important; }
+        .modal-content { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+        .modal-header, .modal-footer { border-color: var(--border); }
     </style>
 </head>
 <body>
