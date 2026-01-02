@@ -12,4 +12,11 @@ return [
     // Mocked user group membership for demonstration; replace with real group lookup.
     'current_user_groups' => explode(';', getenv('USER_GROUPS') ?: ''),
     'database_path' => __DIR__ . '/storage/database.sqlite',
+    // UI theme: 'dark', 'light', or 'auto' (time-based using light_* hours).
+    'theme_mode' => getenv('APP_THEME') ?: 'auto',
+    'light_start_hour' => getenv('APP_LIGHT_START') ?: 7,
+    'light_end_hour' => getenv('APP_LIGHT_END') ?: 19,
+    // User performing actions (for audit logging, e.g., SSO username).
+    'app_user' => getenv('APP_USER') ?: (getenv('USER') ?: 'system'),
+
 ];
