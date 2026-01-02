@@ -192,7 +192,7 @@ $canViewHistory = $accessControl->canViewHistory();
 
             <?php if ($view === 'home'): ?>
             <div class="row g-4">
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <div class="section-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
@@ -236,7 +236,7 @@ $canViewHistory = $accessControl->canViewHistory();
                         </form>
                     </div>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-lg-6">
                     <div class="section-card h-100">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
@@ -437,20 +437,24 @@ $canViewHistory = $accessControl->canViewHistory();
     const entryPad = new SignaturePad(entryCanvas, { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--canvas'), penColor: '#22c55e' });
     const exitPad = new SignaturePad(exitCanvas, { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--canvas'), penColor: '#2563eb' });
 
-    function resizeCanvas(canvas, signaturePad) {
+    function resizeCanvas(canvas, signaturePad, preserveData = false) {
+        const existing = preserveData ? signaturePad.toData() : [];
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
         const ctx = canvas.getContext('2d');
         ctx.scale(ratio, ratio);
         signaturePad.clear();
+        if (preserveData && existing.length) {
+            signaturePad.fromData(existing);
+        }
     }
 
-    function ensureCanvasReady(canvas, pad) {
+    function ensureCanvasReady(canvas, pad, preserveData = false) {
         if (canvas.offsetHeight === 0) {
             canvas.style.height = '180px';
         }
-        resizeCanvas(canvas, pad);
+        resizeCanvas(canvas, pad, preserveData);
     }
 
     window.addEventListener('resize', () => {
@@ -484,7 +488,7 @@ $canViewHistory = $accessControl->canViewHistory();
     });
 
     document.getElementById('exit-form').addEventListener('submit', (event) => {
-        ensureCanvasReady(exitCanvas, exitPad);
+        ensureCanvasReady(exitCanvas, exitPad, true);
         if (exitPad.isEmpty()) {
             event.preventDefault();
             alert('Inserisci la firma di uscita.');
