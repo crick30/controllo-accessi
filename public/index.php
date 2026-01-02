@@ -45,6 +45,12 @@ $filters = [
     'from' => trim($_GET['from'] ?? ''),
     'to' => trim($_GET['to'] ?? ''),
 ];
+$historyFilters = [
+    'search' => trim($_GET['h_search'] ?? ''),
+    'from' => trim($_GET['h_from'] ?? ''),
+    'to' => trim($_GET['h_to'] ?? ''),
+    'status' => trim($_GET['h_status'] ?? 'all'),
+];
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];
@@ -71,8 +77,9 @@ if (isPost($_SERVER)) {
 
 $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisits($filters) : [];
 $auditLogs = $accessControl->canViewAuditLogs() ? (new AuditLogRepository($pdo))->latest() : [];
+$historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
 
-if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'csv') {
+if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="visite_attive.csv"');
     $out = fopen('php://output', 'w');
@@ -91,9 +98,31 @@ if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['expo
     exit;
 }
 
+$isExportHistory = $accessControl->canViewHistory() && isset($_GET['export']) && $_GET['export'] === 'history_csv';
+if ($isExportHistory) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="storico_accessi.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['ID', 'Nome', 'Cognome', 'Azienda', 'Referente', 'Entrata', 'Uscita']);
+    foreach ($historyVisits as $visit) {
+        fputcsv($out, [
+            $visit['id'],
+            $visit['first_name'],
+            $visit['last_name'],
+            $visit['company'] ?? '',
+            $visit['host_last_name'],
+            $visit['entry_time'],
+            $visit['exit_time'] ?? '',
+        ]);
+    }
+    fclose($out);
+    exit;
+}
+
 $isDark = activeTheme($config) === 'dark';
 $canViewActive = $accessControl->canViewActiveList();
 $canViewAudit = $accessControl->canViewAuditLogs();
+$canViewHistory = $accessControl->canViewHistory();
 ?>
 <!DOCTYPE html>
 <html lang="it" class="<?= $isDark ? 'theme-dark' : 'theme-light' ?>">
@@ -226,7 +255,7 @@ $canViewAudit = $accessControl->canViewAuditLogs();
                                 </div>
                                 <div class="col-md-2 d-flex gap-1">
                                     <button class="btn btn-outline-primary w-100" type="submit">Filtra</button>
-                                    <a class="btn btn-outline-success" href="?export=csv">CSV</a>
+                                    <a class="btn btn-outline-success" href="?export=active_csv">CSV</a>
                                 </div>
                             </form>
 
@@ -266,6 +295,76 @@ $canViewAudit = $accessControl->canViewAuditLogs();
                     </div>
                 </div>
             </div>
+
+            <?php if ($canViewHistory): ?>
+                <div class="section-card mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="text-muted small">Storico completo</div>
+                            <h5 class="mb-0">Lista accessi</h5>
+                        </div>
+                        <span class="badge bg-primary bg-gradient badge-pill">Operatori / Admin</span>
+                    </div>
+                    <form class="row g-2 mb-3" method="GET">
+                        <div class="col-md-3">
+                            <input type="text" name="h_search" value="<?= htmlspecialchars($historyFilters['search'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Cerca nome, azienda, referente">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="h_from" value="<?= htmlspecialchars($historyFilters['from'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Dal">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="h_to" value="<?= htmlspecialchars($historyFilters['to'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Al">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="h_status" class="form-select">
+                                <option value="all" <?= $historyFilters['status'] === 'all' ? 'selected' : '' ?>>Tutti</option>
+                                <option value="active" <?= $historyFilters['status'] === 'active' ? 'selected' : '' ?>>Solo presenti</option>
+                                <option value="closed" <?= $historyFilters['status'] === 'closed' ? 'selected' : '' ?>>Solo usciti</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-1">
+                            <button class="btn btn-outline-primary w-100" type="submit">Filtra</button>
+                            <a class="btn btn-outline-success" href="?export=history_csv">CSV</a>
+                        </div>
+                    </form>
+                    <div class="table-responsive" style="max-height: 320px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Azienda</th>
+                                    <th>Referente</th>
+                                    <th>Entrata</th>
+                                    <th>Uscita</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (count($historyVisits) === 0): ?>
+                                    <tr><td colspan="6" class="text-muted">Nessun accesso trovato.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($historyVisits as $visit): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                            <td><?= htmlspecialchars($visit['company'] ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
+                                            <td><?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                            <td><?= date('d/m/Y H:i', strtotime($visit['entry_time'])) ?></td>
+                                            <td><?= $visit['exit_time'] ? date('d/m/Y H:i', strtotime($visit['exit_time'])) : '—' ?></td>
+                                            <td>
+                                                <?php if ($visit['exit_time']): ?>
+                                                    <span class="badge bg-secondary">Uscito</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success">Presente</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <?php if ($canViewAudit): ?>
                 <div class="section-card mt-4">
@@ -396,6 +495,7 @@ $canViewAudit = $accessControl->canViewAuditLogs();
     });
 
     document.getElementById('exit-form').addEventListener('submit', (event) => {
+        ensureCanvasReady(exitCanvas, exitPad);
         if (exitPad.isEmpty()) {
             event.preventDefault();
             alert('Inserisci la firma di uscita.');

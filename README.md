@@ -15,7 +15,7 @@ Poi apri `http://localhost:8000`.
 ## Configurazione (config.php / variabili env)
 - `APP_ENV`: `local` bypassa i controlli di gruppo. Default: `local`.
 - `USER_GROUPS`: gruppi dell’utente separati da `;` (solo se non si usa simulazione).
-- `APP_SIMULATE_ROLE`: per testare ruoli senza AD. Valori: `user` (nessuna lista), `operator` (lista presenti), `admin` (lista + audit).
+- `APP_SIMULATE_ROLE`: per testare ruoli senza AD. Valori: `user` (form + presenti), `operator` (presenti + storico), `admin` (operator + audit).
 - `APP_THEME`: `light` | `dark` | `auto` (default). `auto` usa `APP_LIGHT_START` / `APP_LIGHT_END`.
 - `APP_USER`: nome utente salvato nei log di audit (es. SSO).
 
@@ -23,6 +23,7 @@ Poi apri `http://localhost:8000`.
 - Registro ingresso con firma e timestamp automatico.
 - Registro uscita con firma obbligatoria (modale con canvas funzionante).
 - Lista presenti filtrabile (search, data da/a) ed esportabile in CSV.
+- Storico accessi per operator/admin con filtri (cerca, date, stato) ed export CSV.
 - Audit log visibile solo agli admin, con utente e IP (ISO 27001 ready).
 - Tema light/dark personalizzabile o auto.
 

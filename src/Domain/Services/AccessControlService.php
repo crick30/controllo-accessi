@@ -39,7 +39,25 @@ class AccessControlService
 
     public function canViewActiveList(): bool
     {
+        // Tutti i ruoli (user/operator/admin) possono vedere la lista presenti.
         if ($this->config->isLocal()) {
+            return true;
+        }
+
+        if ($this->config->simulateRole !== null) {
+            return true;
+        }
+
+        return true;
+    }
+
+    public function canViewHistory(): bool
+    {
+        if ($this->config->isLocal()) {
+            return true;
+        }
+
+        if ($this->config->simulateRole === 'admin' || $this->config->simulateRole === 'operator') {
             return true;
         }
 
@@ -49,6 +67,10 @@ class AccessControlService
     public function canViewAuditLogs(): bool
     {
         if ($this->config->isLocal()) {
+            return true;
+        }
+
+        if ($this->config->simulateRole === 'admin') {
             return true;
         }
 

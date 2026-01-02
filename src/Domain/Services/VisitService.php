@@ -57,6 +57,11 @@ class VisitService
         return $this->visits->findActive($filters);
     }
 
+    public function historyVisits(array $filters): array
+    {
+        return $this->visits->findHistory($filters);
+    }
+
     private function assertRequired(array $payload, array $keys): void
     {
         foreach ($keys as $key) {

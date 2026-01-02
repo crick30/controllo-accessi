@@ -63,6 +63,42 @@ class VisitRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findHistory(array $filters = []): array
+    {
+        $query = 'SELECT * FROM visits WHERE 1=1';
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $query .= ' AND (first_name LIKE :term OR last_name LIKE :term OR company LIKE :term OR host_last_name LIKE :term)';
+            $params[':term'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['from'])) {
+            $query .= ' AND entry_time >= :from';
+            $params[':from'] = $filters['from'] . ' 00:00:00';
+        }
+
+        if (!empty($filters['to'])) {
+            $query .= ' AND entry_time <= :to';
+            $params[':to'] = $filters['to'] . ' 23:59:59';
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'all') {
+            if ($filters['status'] === 'active') {
+                $query .= ' AND exit_time IS NULL';
+            } elseif ($filters['status'] === 'closed') {
+                $query .= ' AND exit_time IS NOT NULL';
+            }
+        }
+
+        $query .= ' ORDER BY entry_time DESC';
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM visits WHERE id = :id');
