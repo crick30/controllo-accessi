@@ -18,4 +18,5 @@ return [
     'light_end_hour' => getenv('APP_LIGHT_END') ?: 19,
     // User performing actions (for audit logging, e.g., SSO username).
     'app_user' => getenv('APP_USER') ?: (getenv('USER') ?: 'system'),
+
 ];
