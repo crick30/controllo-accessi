@@ -195,11 +195,11 @@ if ($view === 'audit' && $canViewAudit) {
             <?php endif; ?>
 
             <?php if ($successMessage): ?>
-                <div class="alert alert-success"><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?></div>
+                <div id="alert-success" class="alert alert-success"><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
 
             <?php if ($exitGreeting): ?>
-                <div class="alert alert-info"><?= htmlspecialchars($exitGreeting, ENT_QUOTES, 'UTF-8') ?></div>
+                <div id="alert-exit" class="alert alert-info"><?= htmlspecialchars($exitGreeting, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
 
             <?php if ($view === 'home'): ?>
@@ -507,6 +507,13 @@ if ($view === 'audit' && $canViewAudit) {
             return;
         }
         document.getElementById('exitSignatureData').value = exitPad.toDataURL('image/png');
+    });
+
+    ['alert-success', 'alert-exit'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            setTimeout(() => el.remove(), 5000);
+        }
     });
 </script>
 </body>
