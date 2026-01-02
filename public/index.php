@@ -51,6 +51,7 @@ $historyFilters = [
     'to' => trim($_GET['h_to'] ?? ''),
     'status' => trim($_GET['h_status'] ?? 'all'),
 ];
+$view = $_GET['view'] ?? 'home';
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];
@@ -167,6 +168,12 @@ $canViewHistory = $accessControl->canViewHistory();
         </div>
 
         <div class="p-4">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
+                <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
+                <a class="btn btn-outline-primary<?= $view === 'audit' ? ' active' : '' ?><?= $canViewAudit ? '' : ' disabled' ?>" href="<?= $canViewAudit ? '?view=audit' : '#' ?>">Log di audit</a>
+            </div>
+
             <?php if ($errors): ?>
                 <div class="alert alert-danger">
                     <?php foreach ($errors as $error): ?>
@@ -183,6 +190,7 @@ $canViewHistory = $accessControl->canViewHistory();
                 <div class="alert alert-info"><?= htmlspecialchars($exitGreeting, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
 
+            <?php if ($view === 'home'): ?>
             <div class="row g-4">
                 <div class="col-lg-5">
                     <div class="section-card">
@@ -295,8 +303,7 @@ $canViewHistory = $accessControl->canViewHistory();
                     </div>
                 </div>
             </div>
-
-            <?php if ($canViewHistory): ?>
+            <?php elseif ($view === 'history' && $canViewHistory): ?>
                 <div class="section-card mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
@@ -364,9 +371,7 @@ $canViewHistory = $accessControl->canViewHistory();
                         </table>
                     </div>
                 </div>
-            <?php endif; ?>
-
-            <?php if ($canViewAudit): ?>
+            <?php elseif ($view === 'audit' && $canViewAudit): ?>
                 <div class="section-card mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>

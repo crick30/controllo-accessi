@@ -22,7 +22,7 @@ Poi apri `http://localhost:8000`.
 ## Funzioni principali
 - Registro ingresso con firma e timestamp automatico.
 - Registro uscita con firma obbligatoria (modale con canvas funzionante).
-- Lista presenti filtrabile (search, data da/a) ed esportabile in CSV.
+- Lista presenti filtrabile (search, data da/a) ed esportabile in CSV (dashboard).
 - Storico accessi per operator/admin con filtri (cerca, date, stato) ed export CSV.
 - Audit log visibile solo agli admin, con utente e IP (ISO 27001 ready).
 - Tema light/dark personalizzabile o auto.
@@ -31,6 +31,11 @@ Poi apri `http://localhost:8000`.
 - `public/index.php`: front controller + UI.
 - `src/`: servizi, repository, config, infrastruttura DB.
 - `bootstrap.php`: autoload semplice + configurazione.
+
+## Navigazione UI
+- Dashboard: form di ingresso, lista presenti, pulsanti di navigazione.
+- Lista accessi: solo operator/admin (o simulazione), accesso tramite pulsante.
+- Log di audit: solo admin (o simulazione), accesso tramite pulsante.
 
 ## Nota per il deploy
 Configura un webserver che punti a `public/` come document root; `index.php` root è solo un forwarder per il server built-in.
