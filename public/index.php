@@ -12,9 +12,10 @@ $db = new Database($config);
 $pdo = $db->pdo();
 
 $accessControl = new AccessControlService($config);
+$auditLogger = new AuditLogRepository($pdo);
 $visitService = new VisitService(
     new VisitRepository($pdo),
-    new AuditLogRepository($pdo),
+    $auditLogger,
     $config->appUser,
     $_SERVER['REMOTE_ADDR'] ?? 'unknown'
 );
@@ -52,6 +53,7 @@ $historyFilters = [
     'status' => trim($_GET['h_status'] ?? 'all'),
 ];
 $view = $_GET['view'] ?? 'home';
+[$performedBy, $ipAddress] = [$config->appUser, $_SERVER['REMOTE_ADDR'] ?? 'unknown'];
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];
@@ -77,10 +79,11 @@ if (isPost($_SERVER)) {
 }
 
 $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisits($filters) : [];
-$auditLogs = $accessControl->canViewAuditLogs() ? (new AuditLogRepository($pdo))->latest() : [];
+$auditLogs = $accessControl->canViewAuditLogs() ? $auditLogger->latest() : [];
 $historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
 
 if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
+    $auditLogger->log(null, 'Export lista presenti', 'Records: ' . count($activeVisits), $performedBy, $ipAddress);
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="visite_attive.csv"');
     $out = fopen('php://output', 'w');
@@ -101,6 +104,7 @@ if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['expo
 
 $isExportHistory = $accessControl->canViewHistory() && isset($_GET['export']) && $_GET['export'] === 'history_csv';
 if ($isExportHistory) {
+    $auditLogger->log(null, 'Export storico accessi', 'Records: ' . count($historyVisits), $performedBy, $ipAddress);
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="storico_accessi.csv"');
     $out = fopen('php://output', 'w');
@@ -124,6 +128,14 @@ $isDark = activeTheme($config) === 'dark';
 $canViewActive = $accessControl->canViewActiveList();
 $canViewAudit = $accessControl->canViewAuditLogs();
 $canViewHistory = $accessControl->canViewHistory();
+
+if ($view === 'history' && $canViewHistory) {
+    $auditLogger->log(null, 'View lista accessi', sprintf('Filtri: q=%s, from=%s, to=%s, status=%s', $historyFilters['search'], $historyFilters['from'], $historyFilters['to'], $historyFilters['status']), $performedBy, $ipAddress);
+}
+
+if ($view === 'audit' && $canViewAudit) {
+    $auditLogger->log(null, 'View audit log', 'Consultazione log', $performedBy, $ipAddress);
+}
 ?>
 <!DOCTYPE html>
 <html lang="it" class="<?= $isDark ? 'theme-dark' : 'theme-light' ?>">
