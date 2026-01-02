@@ -134,8 +134,8 @@ $canViewHistory = $accessControl->canViewHistory();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; }
-        .theme-dark { --bg: #111827; --text: #e5e7eb; --muted: #cbd5e1; --card: #1f2937; --border: rgba(255,255,255,0.08); --accent: #60a5fa; --accent-2: #34d399; --canvas: #0f172a; }
-        body { background: radial-gradient(circle at 20% 20%, rgba(37,99,235,0.05), transparent 35%), radial-gradient(circle at 80% 0%, rgba(34,197,94,0.05), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
+        .theme-dark { --bg: #0d1117; --text: #e6e6e6; --muted: #c0c5cc; --card: #111820; --border: rgba(255,255,255,0.08); --accent: #10a37f; --accent-2: #7dd3fc; --canvas: #0b0f15; }
+        body { background: radial-gradient(circle at 20% 20%, rgba(16,163,127,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(125,211,252,0.08), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
         .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
         .hero { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,197,94,0.08)); padding: 28px; display: flex; align-items: center; gap: 16px; }
         .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: linear-gradient(135deg, #7dd3fc, #34d399); display: grid; place-items: center; color: #0b1220; font-weight: 800; font-size: 22px; box-shadow: 0 10px 30px rgba(52,211,153,0.35); }
@@ -251,22 +251,6 @@ $canViewHistory = $accessControl->canViewHistory();
                         </div>
 
                         <?php if ($canViewActive): ?>
-                            <form class="row g-2 mb-3" method="GET">
-                                <div class="col-md-4">
-                                    <input type="text" name="search" value="<?= htmlspecialchars($filters['search'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Cerca nome, azienda, referente">
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="date" name="from" value="<?= htmlspecialchars($filters['from'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Dal">
-                                </div>
-                                <div class="col-md-3">
-                                    <input type="date" name="to" value="<?= htmlspecialchars($filters['to'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Al">
-                                </div>
-                                <div class="col-md-2 d-flex gap-1">
-                                    <button class="btn btn-outline-primary w-100" type="submit">Filtra</button>
-                                    <a class="btn btn-outline-success" href="?export=active_csv">CSV</a>
-                                </div>
-                            </form>
-
                             <?php if (count($activeVisits) === 0): ?>
                                 <div class="text-muted">Nessun visitatore presente al momento.</div>
                             <?php else: ?>
