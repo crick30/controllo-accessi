@@ -103,12 +103,12 @@ $canViewAudit = $accessControl->canViewAuditLogs();
     <title>Controllo Accessi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #f8fafc; --text: #0f172a; --muted: #475569; --card: #ffffff; --border: #e2e8f0; --accent: #2563eb; --accent-2: #10b981; --canvas: #f1f5f9; }
-        .theme-dark { --bg: #0b1220; --text: #e2e8f0; --muted: #94a3b8; --card: #0f172a; --border: rgba(255,255,255,0.08); --accent: #3b82f6; --accent-2: #10b981; --canvas: #0b1220; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
-        .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.15); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
-        .hero { background: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.15), transparent 40%), radial-gradient(circle at 80% 0%, rgba(16,185,129,0.15), transparent 35%), linear-gradient(90deg, var(--card), var(--bg)); padding: 28px; display: flex; align-items: center; gap: 16px; }
-        .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: linear-gradient(135deg, #60a5fa, #22c55e); display: grid; place-items: center; color: #0b1220; font-weight: 800; font-size: 22px; box-shadow: 0 10px 30px rgba(34,197,94,0.3); }
+        :root { --bg: #f7f9fc; --text: #0f172a; --muted: #52606d; --card: #ffffff; --border: #e5e7eb; --accent: #2563eb; --accent-2: #22c55e; --canvas: #eef2f7; }
+        .theme-dark { --bg: #111827; --text: #e5e7eb; --muted: #cbd5e1; --card: #1f2937; --border: rgba(255,255,255,0.08); --accent: #60a5fa; --accent-2: #34d399; --canvas: #0f172a; }
+        body { background: radial-gradient(circle at 20% 20%, rgba(37,99,235,0.05), transparent 35%), radial-gradient(circle at 80% 0%, rgba(34,197,94,0.05), transparent 35%), var(--bg); color: var(--text); min-height: 100vh; }
+        .app-shell { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .hero { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(34,197,94,0.08)); padding: 28px; display: flex; align-items: center; gap: 16px; }
+        .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: linear-gradient(135deg, #7dd3fc, #34d399); display: grid; place-items: center; color: #0b1220; font-weight: 800; font-size: 22px; box-shadow: 0 10px 30px rgba(52,211,153,0.35); }
         .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; height: 100%; }
         .section-card h5 { color: var(--accent); letter-spacing: 0.2px; margin-bottom: 12px; }
         .form-label { color: var(--muted); }
@@ -117,7 +117,7 @@ $canViewAudit = $accessControl->canViewAuditLogs();
         .table { color: var(--text); }
         .table thead th { border-color: var(--border); }
         .table td, .table th { border-color: var(--border); }
-        canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); }
+        canvas.signature-pad { width: 100%; height: 180px; border-radius: 10px; border: 1px dashed var(--border); background: var(--canvas); touch-action: none; }
         .badge-pill { border-radius: 30px; padding: 8px 14px; }
     </style>
 </head>
@@ -132,7 +132,8 @@ $canViewAudit = $accessControl->canViewAuditLogs();
             </div>
             <div class="ms-auto text-muted small text-end">
                 Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
-                Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong>
+                Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong><br>
+                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong>
             </div>
         </div>
 
@@ -384,14 +385,14 @@ $canViewAudit = $accessControl->canViewAuditLogs();
     });
 
     const exitModal = document.getElementById('exitModal');
-    exitModal.addEventListener('show.bs.modal', (event) => {
+    exitModal.addEventListener('shown.bs.modal', (event) => {
         const button = event.relatedTarget;
         const visitId = button.getAttribute('data-visit-id');
         const visitorName = button.getAttribute('data-visitor-name');
         document.getElementById('exitVisitId').value = visitId;
         document.getElementById('exitVisitorName').textContent = `Uscita per ${visitorName}`;
         exitPad.clear();
-        setTimeout(() => ensureCanvasReady(exitCanvas, exitPad), 100);
+        setTimeout(() => ensureCanvasReady(exitCanvas, exitPad), 50);
     });
 
     document.getElementById('exit-form').addEventListener('submit', (event) => {

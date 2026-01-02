@@ -19,7 +19,22 @@ class AccessControlService
             return true;
         }
 
-        return (bool) array_intersect($this->config->currentUserGroups, $requiredGroups);
+        return (bool) array_intersect($this->effectiveGroups(), $requiredGroups);
+    }
+
+    private function effectiveGroups(): array
+    {
+        if ($this->config->simulateRole === 'admin') {
+            return array_unique([...$this->config->adminGroups, ...$this->config->operatorGroups]);
+        }
+        if ($this->config->simulateRole === 'operator') {
+            return $this->config->operatorGroups;
+        }
+        if ($this->config->simulateRole === 'user') {
+            return [];
+        }
+
+        return $this->config->currentUserGroups;
     }
 
     public function canViewActiveList(): bool

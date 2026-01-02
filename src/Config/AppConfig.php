@@ -8,6 +8,7 @@ class AppConfig
     public array $operatorGroups;
     public array $adminGroups;
     public array $currentUserGroups;
+    public ?string $simulateRole;
     public string $databasePath;
     public string $themeMode;
     public int $lightStartHour;
@@ -20,6 +21,7 @@ class AppConfig
         $this->operatorGroups = $data['operator_groups'] ?? [];
         $this->adminGroups = $data['admin_groups'] ?? [];
         $this->currentUserGroups = $data['current_user_groups'] ?? [];
+        $this->simulateRole = $data['simulate_role'] ?? null;
         $this->databasePath = $data['database_path'] ?? __DIR__ . '/storage/database.sqlite';
         $this->themeMode = $data['theme_mode'] ?? 'auto';
         $this->lightStartHour = (int) ($data['light_start_hour'] ?? 7);
