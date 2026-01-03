@@ -229,6 +229,21 @@ if ($view === 'audit' && $canViewAudit) {
         .alert-success { background: var(--color-success); border-color: var(--color-success); color: #000000; }
         .alert-info { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
         .alert-warning { background: var(--color-border); border-color: var(--color-border); color: var(--color-text-primary); }
+        .alt-hero { background: linear-gradient(135deg, rgba(4,118,244,0.12), rgba(51,225,161,0.18)); border: 1px solid var(--border); border-radius: 18px; padding: 22px 24px; display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+        .alt-hero .pill { background: var(--color-primary); color: #FFFFFF; padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+        .alt-hero .stat-card { min-width: 140px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+        .alt-hero .stat-value { font-size: 26px; font-weight: 800; margin: 0; }
+        .glass-card { background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border: 1px solid var(--border); border-radius: 18px; padding: 18px; box-shadow: 0 18px 28px rgba(0,0,0,0.06); }
+        .glass-card h5 { margin-bottom: 6px; }
+        .ribbon { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; font-size: 13px; }
+        .pill-ghost { padding: 6px 12px; border-radius: 999px; border: 1px dashed var(--border); font-size: 13px; color: var(--muted); }
+        .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .presenti-card { border: 1px dashed var(--border); border-radius: 14px; padding: 12px; display: flex; gap: 12px; align-items: center; }
+        .presenti-avatar { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--table-alt); color: var(--color-primary); font-weight: 700; }
+        .timeline { border-left: 2px solid var(--border); padding-left: 12px; margin: 0; list-style: none; display: grid; gap: 12px; }
+        .timeline li { position: relative; }
+        .timeline li::before { content: ""; position: absolute; left: -19px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 4px var(--table-alt); }
+        .alt-subtitle { color: var(--muted); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -252,6 +267,7 @@ if ($view === 'audit' && $canViewAudit) {
                 <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
                 <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
                 <a class="btn btn-outline-primary<?= $view === 'audit' ? ' active' : '' ?><?= $canViewAudit ? '' : ' disabled' ?>" href="<?= $canViewAudit ? '?view=audit' : '#' ?>">Log di audit</a>
+                <a class="btn btn-outline-primary<?= $view === 'alt' ? ' active' : '' ?>" href="?view=alt">UI alternativa</a>
             </div>
 
             <?php if ($errors): ?>
@@ -367,6 +383,142 @@ if ($view === 'audit' && $canViewAudit) {
                     </div>
                 </div>
             </div>
+            <?php elseif ($view === 'alt'): ?>
+                <div class="alt-hero mb-4">
+                    <div>
+                        <div class="pill mb-2">Concept visivo</div>
+                        <h2 class="h4 mb-1">Interfaccia alternativa sperimentale</h2>
+                        <p class="mb-0 alt-subtitle">Una vista più ariosa per reception e desk informativi, con riepiloghi rapidi.</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 ms-auto">
+                        <div class="stat-card">
+                            <div class="alt-subtitle">Presenti</div>
+                            <p class="stat-value mb-0"><?= $canViewActive ? count($activeVisits) : '—' ?></p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="alt-subtitle">Accessi totali</div>
+                            <p class="stat-value mb-0"><?= $canViewHistory ? count($historyVisits) : '—' ?></p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="alt-subtitle">Log</div>
+                            <p class="stat-value mb-0"><?= $canViewAudit ? count($auditLogs) : '—' ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="glass-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <div class="alt-subtitle">Check-in semplificato</div>
+                                    <h5 class="mb-0">Registra un nuovo ingresso</h5>
+                                </div>
+                                <span class="ribbon">Oggi <?= date('d/m/Y') ?></span>
+                            </div>
+                            <form method="POST" id="entry-form-alt">
+                                <input type="hidden" name="form_type" value="entry">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nome *</label>
+                                        <input type="text" class="form-control" name="first_name" required placeholder="Nome del visitatore">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cognome *</label>
+                                        <input type="text" class="form-control" name="last_name" required placeholder="Cognome del visitatore">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Azienda (facoltativa)</label>
+                                        <input type="text" class="form-control" name="company" placeholder="Organizzazione di appartenenza">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Referente interno *</label>
+                                        <input type="text" class="form-control" name="host_last_name" required placeholder="Chi accoglie il visitatore">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label mb-0">Firma di entrata *</label>
+                                            <span class="pill-ghost">Touch o mouse</span>
+                                        </div>
+                                        <canvas id="entrySignatureAlt" class="signature-pad"></canvas>
+                                        <input type="hidden" name="entry_signature" id="entrySignatureDataAlt" required>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearEntrySignatureAlt">Pulisci firma</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex justify-content-between align-items-center">
+                                        <div class="alt-subtitle">L'orario viene salvato automaticamente all'invio.</div>
+                                        <div class="quick-actions">
+                                            <a href="?view=home" class="btn btn-outline-primary btn-sm">Vista classica</a>
+                                            <button type="submit" class="btn btn-primary">Conferma ingresso</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 d-flex flex-column gap-3">
+                        <div class="glass-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="alt-subtitle">Presenze in tempo reale</div>
+                                    <h5 class="mb-0">Visitatori presenti</h5>
+                                </div>
+                                <?php if (!$config->isLocal()): ?>
+                                    <span class="ribbon">Accesso controllato</span>
+                                <?php else: ?>
+                                    <span class="ribbon">Ambiente locale</span>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if (!$canViewActive): ?>
+                                <div class="alert alert-warning mb-0">Accesso alla lista consentito solo a operatori o admin autorizzati.</div>
+                            <?php elseif (count($activeVisits) === 0): ?>
+                                <div class="text-muted">Nessun visitatore presente ora.</div>
+                            <?php else: ?>
+                                <div class="d-grid gap-2">
+                                    <?php foreach ($activeVisits as $visit): ?>
+                                        <div class="presenti-card">
+                                            <div class="presenti-avatar"><?= strtoupper(substr($visit['first_name'], 0, 1) . substr($visit['last_name'], 0, 1)) ?></div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold"><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                                <div class="alt-subtitle">Referente: <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                                <div class="alt-subtitle">Entrata: <?= date('d/m/Y H:i', strtotime($visit['entry_time'])) ?></div>
+                                            </div>
+                                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#exitModal" data-visit-id="<?= $visit['id'] ?>" data-visitor-name="<?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?>">Uscita</button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($canViewHistory): ?>
+                            <div class="glass-card">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="alt-subtitle">Ultimi movimenti</div>
+                                        <h5 class="mb-0">Timeline rapida</h5>
+                                    </div>
+                                    <a href="?view=history" class="btn btn-outline-primary btn-sm">Apri elenco</a>
+                                </div>
+                                <ul class="timeline">
+                                    <?php $recentHistory = array_slice($historyVisits, 0, 4); ?>
+                                    <?php if (count($recentHistory) === 0): ?>
+                                        <li class="text-muted">Ancora nessun accesso registrato.</li>
+                                    <?php else: ?>
+                                        <?php foreach ($recentHistory as $visit): ?>
+                                            <li>
+                                                <div class="fw-semibold"><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                                <div class="alt-subtitle">Entrata: <?= date('d/m/Y H:i', strtotime($visit['entry_time'])) ?></div>
+                                                <div class="alt-subtitle">Esito: <?= $visit['exit_time'] ? 'Uscito' : 'Ancora presente' ?></div>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             <?php elseif ($view === 'history' && $canViewHistory): ?>
                 <div class="section-card mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -512,16 +664,20 @@ if ($view === 'audit' && $canViewAudit) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
 <script>
-    const entryCanvas = document.getElementById('entrySignature');
+    const entryCanvas = document.getElementById('entrySignature') || document.getElementById('entrySignatureAlt');
+    const entryDataInput = document.getElementById('entrySignatureData') || document.getElementById('entrySignatureDataAlt');
+    const entryForm = document.getElementById('entry-form') || document.getElementById('entry-form-alt');
+    const clearEntryButton = document.getElementById('clearEntrySignature') || document.getElementById('clearEntrySignatureAlt');
     const exitCanvas = document.getElementById('exitSignature');
     const computedStyles = getComputedStyle(document.documentElement);
     const canvasColor = computedStyles.getPropertyValue('--canvas');
     const successColor = computedStyles.getPropertyValue('--color-success');
     const primaryColor = computedStyles.getPropertyValue('--color-primary');
-    const entryPad = new SignaturePad(entryCanvas, { backgroundColor: canvasColor, penColor: successColor });
+    const entryPad = entryCanvas ? new SignaturePad(entryCanvas, { backgroundColor: canvasColor, penColor: successColor }) : null;
     const exitPad = new SignaturePad(exitCanvas, { backgroundColor: canvasColor, penColor: primaryColor });
 
     function resizeCanvas(canvas, signaturePad, preserveData = false) {
+        if (!canvas || !signaturePad) return;
         const existing = preserveData ? signaturePad.toData() : [];
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
@@ -535,6 +691,7 @@ if ($view === 'audit' && $canViewAudit) {
     }
 
     function ensureCanvasReady(canvas, pad, preserveData = false) {
+        if (!canvas || !pad) return;
         if (canvas.offsetHeight === 0) {
             canvas.style.height = '180px';
         }
@@ -542,23 +699,27 @@ if ($view === 'audit' && $canViewAudit) {
     }
 
     window.addEventListener('resize', () => {
-        ensureCanvasReady(entryCanvas, entryPad);
+        if (entryPad) ensureCanvasReady(entryCanvas, entryPad);
         ensureCanvasReady(exitCanvas, exitPad);
     });
 
-    ensureCanvasReady(entryCanvas, entryPad);
+    if (entryPad) ensureCanvasReady(entryCanvas, entryPad);
 
-    document.getElementById('clearEntrySignature').addEventListener('click', () => entryPad.clear());
+    if (clearEntryButton && entryPad) {
+        clearEntryButton.addEventListener('click', () => entryPad.clear());
+    }
     document.getElementById('clearExitSignature').addEventListener('click', () => exitPad.clear());
 
-    document.getElementById('entry-form').addEventListener('submit', (event) => {
-        if (entryPad.isEmpty()) {
-            event.preventDefault();
-            alert('Inserisci la firma di entrata.');
-            return;
-        }
-        document.getElementById('entrySignatureData').value = entryPad.toDataURL('image/png');
-    });
+    if (entryForm && entryPad && entryDataInput) {
+        entryForm.addEventListener('submit', (event) => {
+            if (entryPad.isEmpty()) {
+                event.preventDefault();
+                alert('Inserisci la firma di entrata.');
+                return;
+            }
+            entryDataInput.value = entryPad.toDataURL('image/png');
+        });
+    }
 
     const exitModal = document.getElementById('exitModal');
     exitModal.addEventListener('shown.bs.modal', (event) => {
