@@ -1,0 +1,18 @@
+# Ambiente locale e varianti non versionate
+.env
+.env.local
+.env.*.local
+.env.*.secret
+
+# Database e storage runtime
+storage/
+*.sqlite
+*.db
+
+# Log e file temporanei
+*.log
+*.cache
+*.tmp
+
+# Dipendenze vendor (se aggiunte in futuro)
+vendor/
