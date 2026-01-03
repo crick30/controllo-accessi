@@ -88,6 +88,10 @@ if (isPost($_SERVER)) {
 $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisits($filters) : [];
 $auditLogs = $accessControl->canViewAuditLogs() ? $auditLogger->latest() : [];
 $historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
+$activeCount = count($activeVisits);
+$historyCount = count($historyVisits);
+$latestHistory = array_slice($historyVisits, 0, 4);
+$lastAudit = $auditLogs[0] ?? null;
 
 if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
     $auditLogger->log(null, 'Export lista presenti', 'Records: ' . count($activeVisits), $performedBy, $ipAddress);
@@ -262,6 +266,29 @@ if ($view === 'audit' && $canViewAudit) {
         .concept-mini-timeline { list-style: none; padding-left: 0; margin: 10px 0 0 0; }
         .concept-mini-timeline li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--color-surface); }
         .concept-mini-timeline .meta { color: var(--muted); font-size: 12px; }
+        .concept-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+        .concept-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
+        .concept-stat strong { font-size: 22px; }
+        .concept-stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .concept-stat .signal { width: 34px; height: 34px; border-radius: 10px; background: rgba(4,118,244,0.12); display: grid; place-items: center; color: var(--color-primary); font-weight: 700; }
+        .concept-stat.success .signal { background: rgba(51,225,161,0.18); color: #0f5132; }
+        .concept-stat.orange .signal { background: rgba(255, 159, 64, 0.16); color: #d9822b; }
+        .concept-stat::after { content: \"\"; position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(4,118,244,0.12), transparent 60%); top: -20px; right: -30px; }
+        .concept-stat.success::after { background: radial-gradient(circle, rgba(51,225,161,0.16), transparent 60%); }
+        .concept-card.compact { padding: 12px; }
+        .concept-chip.muted { background: rgba(255,255,255,0.08); color: var(--muted); }
+        .concept-list { list-style: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+        .concept-list li { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; background: var(--color-surface); }
+        .concept-list .meta { color: var(--muted); font-size: 12px; }
+        .concept-list .status { padding: 4px 10px; border-radius: 999px; font-size: 12px; border: 1px dashed var(--border); }
+        .status.live { background: rgba(4,118,244,0.12); color: var(--color-primary); }
+        .status.active { background: rgba(51,225,161,0.18); color: #0f5132; }
+        .status.idle { background: rgba(255, 159, 64, 0.12); color: #d9822b; }
+        .concept-cta { display: flex; flex-wrap: wrap; gap: 8px; }
+        .concept-cta .btn { border-radius: 10px; }
+        .concept-section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .concept-section-title .subtitle { color: var(--muted); font-size: 12px; }
+        .concept-badge { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; }
         @media (max-width: 768px) {
             .hero { flex-direction: column; align-items: flex-start; }
             .concept-toggle { width: 100%; justify-content: space-between; }
@@ -288,29 +315,52 @@ if ($view === 'audit' && $canViewAudit) {
             </div>
         </div>
 
-        <div class="p-4">
+            <div class="p-4">
             <?php if ($uiStyle === 'concept'): ?>
                 <div class="concept-lab mb-3">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <div>
-                            <div class="text-muted small">Laboratorio UI</div>
-                            <h5 class="mb-1">Proposte alternative per l’interfaccia</h5>
-                            <div class="text-muted small">Esplora variazioni di layout, chips e timeline per presentare i dati in modo narrativo.</div>
+                            <div class="text-muted small">Laboratorio UI · Versione 2</div>
+                            <h5 class="mb-1">Esperienza narrativa e dati pronti all’azione</h5>
+                            <div class="text-muted small">Questa bozza mostra come presentare statistiche, timeline e suggerimenti operativi in modo compatto.</div>
                         </div>
-                        <div class="concept-chip success">Moodboard attiva</div>
+                        <div class="concept-chip success">Concept attivo</div>
+                    </div>
+                    <div class="concept-stats">
+                        <div class="concept-stat success">
+                            <div class="signal">A</div>
+                            <div>
+                                <div class="label">Presenti adesso</div>
+                                <strong><?= $activeCount ?></strong>
+                            </div>
+                        </div>
+                        <div class="concept-stat">
+                            <div class="signal">H</div>
+                            <div>
+                                <div class="label">Accessi filtrati</div>
+                                <strong><?= $historyCount ?></strong>
+                            </div>
+                        </div>
+                        <div class="concept-stat orange">
+                            <div class="signal">L</div>
+                            <div>
+                                <div class="label">Ultima azione</div>
+                                <strong><?= ($lastAudit && $canViewAudit) ? htmlspecialchars($lastAudit['action'], ENT_QUOTES, 'UTF-8') : 'N/D' ?></strong>
+                            </div>
+                        </div>
                     </div>
                     <div class="concept-grid">
                         <div class="concept-card">
                             <div class="spark"></div>
-                            <div class="concept-chip mb-2">Pannello ibrido</div>
-                            <div class="concept-bullet">Header con badge di contesto e CTA principali.</div>
-                            <div class="concept-pill-list">
-                                <span class="badge bg-success">Timeline ingressi</span>
-                                <span class="badge bg-primary">Card laterali</span>
-                                <span class="badge bg-secondary">CTA fluttuanti</span>
+                            <div class="concept-section-title mb-2">
+                                <div>
+                                    <div class="text-muted small">Timeline immediata</div>
+                                    <h6 class="mb-0">Ultimi ingressi</h6>
+                                </div>
+                                <span class="concept-badge">V2</span>
                             </div>
                             <ul class="concept-mini-timeline">
-                                <?php if (count($activeVisits) > 0): ?>
+                                <?php if ($activeCount > 0): ?>
                                     <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
                                         <li>
                                             <div>
@@ -327,33 +377,71 @@ if ($view === 'audit' && $canViewAudit) {
                                     </li>
                                 <?php endif; ?>
                             </ul>
+                            <div class="concept-cta mt-2">
+                                <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars(buildUrl(['view' => 'home']), ENT_QUOTES, 'UTF-8') ?>">Registra nuovo ingresso</a>
+                                <a class="btn btn-sm btn-outline-secondary<?= $canViewActive ? '' : ' disabled' ?>" href="<?= $canViewActive ? htmlspecialchars(buildUrl(['export' => 'active_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta presenti</a>
+                            </div>
                         </div>
-                        <div class="concept-card">
+                        <div class="concept-card compact">
                             <div class="spark green"></div>
-                            <div class="concept-chip success mb-2">Palette narrativa</div>
-                            <p class="mb-2 small">Fondali sfumati e cards stratificate per dare profondità senza perdere leggibilità.</p>
-                            <ul class="list-unstyled small">
-                                <li class="concept-bullet">Comparti “ingresso/uscita” con tag colorati.</li>
-                                <li class="concept-bullet">Badge ruoli per segmentare i pannelli.</li>
-                                <li class="concept-bullet">CTA evidenziate in chiave neon (verde/blu).</li>
-                            </ul>
-                            <div class="concept-pill-list">
-                                <span class="badge bg-info">Glass effect</span>
-                                <span class="badge bg-success">Gradienti morbidi</span>
-                                <span class="badge bg-primary">Contrast helper</span>
+                            <div class="concept-section-title mb-2">
+                                <div>
+                                    <div class="text-muted small">Stato operativo</div>
+                                    <h6 class="mb-0">Slot rapidi</h6>
+                                </div>
+                                <span class="concept-chip ghost">Idee v2</span>
                             </div>
+                            <ul class="concept-list">
+                                <li>
+                                    <div>
+                                        <strong>Firma istantanea</strong><br>
+                                        <span class="meta">CTA per apertura modale uscita/ingresso con firma pre-selezionata.</span>
+                                    </div>
+                                    <span class="status live">Proposta</span>
+                                </li>
+                                <li>
+                                    <div>
+                                        <strong>Badge ruoli</strong><br>
+                                        <span class="meta">Etichette per admin/operatori visibili nelle liste.</span>
+                                    </div>
+                                    <span class="status active">Mock</span>
+                                </li>
+                                <li>
+                                    <div>
+                                        <strong>Alert turnover</strong><br>
+                                        <span class="meta">Segnala se un visitatore è dentro da oltre X ore.</span>
+                                    </div>
+                                    <span class="status idle">Backlog</span>
+                                </li>
+                            </ul>
                         </div>
                         <div class="concept-card">
-                            <div class="concept-chip ghost mb-2">Widget rapidi</div>
-                            <p class="mb-1 small">Mini-schedine per vedere e agire senza aprire modali.</p>
-                            <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="concept-section-title mb-2">
                                 <div>
-                                    <div class="text-muted small">Presenti ora</div>
-                                    <h4 class="mb-0"><?= count($activeVisits) ?></h4>
+                                    <div class="text-muted small">Ultimi movimenti</div>
+                                    <h6 class="mb-0">Storico rapido</h6>
                                 </div>
-                                <span class="badge bg-primary">Realtime</span>
+                                <span class="concept-chip muted">Solo anteprima</span>
                             </div>
-                            <div class="text-muted small">Idea: pulsanti rapidi per chiudere visite o segnalare ospiti VIP direttamente dalla lista.</div>
+                            <?php if (count($latestHistory) > 0): ?>
+                                <ul class="concept-mini-timeline">
+                                    <?php foreach ($latestHistory as $visit): ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                                <span class="meta"><?= $visit['exit_time'] ? 'Uscito' : 'Presente' ?> · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                            </div>
+                                            <span class="meta"><?= date('d/m H:i', strtotime($visit['entry_time'])) ?></span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                <div class="text-muted small">Nessun dato storico disponibile con i filtri correnti.</div>
+                            <?php endif; ?>
+                            <div class="concept-cta mt-2">
+                                <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['view' => 'history']), ENT_QUOTES, 'UTF-8') : '#' ?>">Vai alla lista accessi</a>
+                                <a class="btn btn-sm btn-outline-success<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['export' => 'history_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta CSV</a>
+                            </div>
                         </div>
                     </div>
                 </div>
