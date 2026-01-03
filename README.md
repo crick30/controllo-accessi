@@ -37,5 +37,63 @@ Poi apri `http://localhost:8000`.
 - Lista accessi: solo operator/admin (o simulazione), accesso tramite pulsante.
 - Log di audit: solo admin (o simulazione), accesso tramite pulsante.
 
-## Nota per il deploy
-Configura un webserver che punti a `public/` come document root; `index.php` root è solo un forwarder per il server built-in.
+## Guida produzione
+### Principi base
+- Usa un web server (IIS, Apache/Nginx) con PHP-FPM/FastCGI e imposta `public/` come document root. Il file `index.php` nella root serve solo per il server PHP built-in.
+- Assicurati che la cartella `storage/` (creata automaticamente accanto a `config.php` alla prima esecuzione) sia scrivibile dal processo PHP: il database SQLite vive qui (`storage/database.sqlite`).
+- In produzione non usare il server integrato: preferisci un VirtualHost/Site con HTTPS e restrizioni di accesso alla root.
+
+### Prima installazione
+1) **Clona e installa dipendenze PHP** (nessun composer richiesto; basta PHP 8.1+ con SQLite).
+2) **Crea il file `.env`** nella root del progetto (stesso livello di `config.php`). Esempio minimo per produzione:
+   ```bash
+   APP_ENV=production
+   APP_USER=portal-sso  # utente che compare nei log di audit (es. header SSO)
+   USER_GROUPS="CN=AccessOperators,OU=Security,DC=example,DC=com;CN=AccessAdmins,OU=Security,DC=example,DC=com"  # se non hai integrazione AD diretta
+   APP_THEME=auto
+   ```
+   - Imposta `APP_ENV=production` per abilitare i controlli di gruppo.
+   - `USER_GROUPS` viene usato solo se non hai una sorgente AD: è la lista di gruppi dell’utente loggato separati da `;`.
+   - Per profili differenti crea `.env.production` o esporta `APP_ENV_PROFILE=production`: verrà caricato dopo `.env`.
+3) **Configura il web server** puntando `DocumentRoot`/`root`/`Physical Path` a `<project>/public` e abilita PHP-FPM/FastCGI. Blocca l’accesso diretto alla root del progetto.
+
+   **Esempio IIS (FastCGI):**
+   - Installa il modulo PHP per IIS (PHP Manager o configurazione manuale FastCGI) con PHP 8.1+ e SQLite attivo.
+   - Crea un nuovo Site con `Physical Path` su `<project>/public` e binding HTTPS.
+   - Aggiungi una regola di URL Rewrite (o `web.config`) per reindirizzare tutto a `index.php` se non esiste il file:
+     ```xml
+     <configuration>
+       <system.webServer>
+         <rewrite>
+           <rules>
+             <rule name="FrontController" stopProcessing="true">
+               <match url=".*" />
+               <conditions>
+                 <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                 <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+               </conditions>
+               <action type="Rewrite" url="index.php" appendQueryString="true" />
+             </rule>
+           </rules>
+         </rewrite>
+       </system.webServer>
+     </configuration>
+     ```
+   - Permessi: assegna **Modify** all’identity del pool applicativo sulla cartella `storage/` (database SQLite) e **Read** sul resto del progetto.
+4) **Permessi**: verifica che l’utente PHP possa creare/leggere/scrivere `storage/database.sqlite`. In ambienti con SELinux/AppArmor potrebbe servire un contesto dedicato.
+
+### Aggiornamenti
+1) **Metti il sito in manutenzione** (se necessario) e blocca nuovi accessi.
+2) **Backup**: copia `storage/database.sqlite` (e l’eventuale `.env`/`.env.*`). Esempio: `cp storage/database.sqlite storage/database.sqlite.$(date +%F-%H%M).bak`.
+3) **Aggiorna il codice** (git pull o deploy artefatto) mantenendo `config.php` e i file `.env`.
+4) **Migrazioni**: l’app esegue automaticamente la creazione/aggiornamento delle tabelle su SQLite all’avvio (`Infrastructure/Database.php`). Non serve una procedura manuale.
+5) **Verifiche post-deploy**:
+   - Apri la home e registra un ingresso/uscita di prova.
+   - Esporta CSV di presenti/storico (se il ruolo lo consente) per validare permessi e scrittura su disco.
+   - Controlla i log di audit: devono riportare utente (`APP_USER` o header SSO) e IP.
+
+### Variabili e profili
+- `APP_ENV_FILE`: percorso alternativo di un file `.env` da caricare prima di `.env`/`.env.<profile>`.
+- `APP_ENV_PROFILE`: carica `.env.<profile>` dopo `.env` (utile per distinguere `production`, `staging`, ecc.).
+- `APP_ENV`: se impostato a `local` disabilita i controlli di gruppo; con `production` li attiva.
+- `APP_SIMULATE_ROLE`: **solo per test** (`user` | `operator` | `admin`), ha priorità rispetto ai gruppi reali.
