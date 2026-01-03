@@ -56,7 +56,8 @@ class Logger
             return;
         }
 
-        $timestamp = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+        $now = new DateTimeImmutable('now');
+        $timestamp = $now->format('Y-m-d H:i:s');
         $line = sprintf(
             "%s [%s] %s%s\n",
             $timestamp,
@@ -65,7 +66,8 @@ class Logger
             $this->formatContext($context)
         );
 
-        file_put_contents($this->logPath, $line, FILE_APPEND | LOCK_EX);
+        $dailyPath = $this->resolveDailyPath($now);
+        file_put_contents($dailyPath, $line, FILE_APPEND | LOCK_EX);
     }
 
     private function shouldLog(string $level): bool
@@ -85,5 +87,15 @@ class Logger
         }
 
         return ' | context=' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    private function resolveDailyPath(DateTimeImmutable $date): string
+    {
+        $directory = dirname($this->logPath);
+        $info = pathinfo($this->logPath);
+        $base = $info['filename'] ?? 'app';
+        $extension = isset($info['extension']) && $info['extension'] !== '' ? '.' . $info['extension'] : '';
+
+        return $directory . DIRECTORY_SEPARATOR . $base . '_' . $date->format('Ymd') . $extension;
     }
 }
