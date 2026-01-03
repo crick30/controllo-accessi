@@ -29,6 +29,12 @@ function isPost(array $server): bool
     return ($server['REQUEST_METHOD'] ?? 'GET') === 'POST';
 }
 
+function buildUrl(array $params): string
+{
+    $merged = array_merge($_GET, $params);
+    return '?' . http_build_query($merged);
+}
+
 function activeTheme(Config\AppConfig $config): string
 {
     if ($config->themeMode === 'dark') {
@@ -53,6 +59,7 @@ $historyFilters = [
     'status' => trim($_GET['h_status'] ?? 'all'),
 ];
 $view = $_GET['view'] ?? 'home';
+$uiStyle = in_array($_GET['ui'] ?? 'classic', ['classic', 'concept'], true) ? $_GET['ui'] : 'classic';
 [$performedBy, $ipAddress] = [$config->appUser, $_SERVER['REMOTE_ADDR'] ?? 'unknown'];
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
@@ -196,6 +203,7 @@ if ($view === 'audit' && $canViewAudit) {
         }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         a { color: var(--color-primary); }
+        body.ui-concept { background: radial-gradient(circle at 10% 20%, rgba(4, 118, 244, 0.08), transparent 28%), radial-gradient(circle at 90% 10%, rgba(51, 225, 161, 0.12), transparent 26%), radial-gradient(circle at 70% 80%, rgba(233, 10, 7, 0.06), transparent 30%), var(--bg); }
         .app-shell { background: var(--card); box-shadow: 0 20px 60px var(--border); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
         .hero { background: var(--color-surface); padding: 28px; display: flex; align-items: center; gap: 16px; }
         .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: var(--color-primary); display: grid; place-items: center; color: #FFFFFF; font-weight: 800; font-size: 22px; box-shadow: 0 0 0 1px var(--border); }
@@ -229,9 +237,38 @@ if ($view === 'audit' && $canViewAudit) {
         .alert-success { background: var(--color-success); border-color: var(--color-success); color: #000000; }
         .alert-info { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
         .alert-warning { background: var(--color-border); border-color: var(--color-border); color: var(--color-text-primary); }
+        /* Alternative UI */
+        .ui-concept .app-shell { border: 1px solid rgba(4, 118, 244, 0.35); box-shadow: 0 25px 80px rgba(0,0,0,0.2); }
+        .ui-concept .hero { border-bottom: 1px dashed var(--border); position: relative; overflow: hidden; }
+        .ui-concept .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(4,118,244,0.08), rgba(51,225,161,0.05)); pointer-events: none; }
+        .ui-concept .logo-mark { box-shadow: 0 10px 30px rgba(4,118,244,0.35); }
+        .concept-toggle { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 6px; display: inline-flex; gap: 6px; }
+        .concept-toggle .btn { border-radius: 10px; }
+        .concept-lab { border: 1px dashed var(--border); border-radius: 14px; padding: 16px; background: linear-gradient(135deg, rgba(4, 118, 244, 0.04), rgba(51, 225, 161, 0.05)); }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+        .concept-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; }
+        .concept-card small { color: var(--muted); }
+        .concept-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(4, 118, 244, 0.12); color: var(--text); font-weight: 600; }
+        .concept-chip.success { background: rgba(51, 225, 161, 0.18); }
+        .concept-chip.ghost { background: rgba(255,255,255,0.06); border: 1px dashed var(--border); }
+        .concept-pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .concept-card .badge { font-size: 11px; }
+        .concept-card .spark { position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(4,118,244,0.18), transparent 60%); top: -28px; right: -32px; opacity: 0.7; }
+        .concept-card .spark.green { background: radial-gradient(circle, rgba(51,225,161,0.16), transparent 60%); left: -32px; right: auto; top: auto; bottom: -32px; }
+        .concept-card .list-unstyled { margin-bottom: 0; }
+        .concept-card .list-unstyled li { margin-bottom: 4px; }
+        .concept-bullet { display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); }
+        .concept-bullet::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); display: inline-block; }
+        .concept-mini-timeline { list-style: none; padding-left: 0; margin: 10px 0 0 0; }
+        .concept-mini-timeline li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--color-surface); }
+        .concept-mini-timeline .meta { color: var(--muted); font-size: 12px; }
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; align-items: flex-start; }
+            .concept-toggle { width: 100%; justify-content: space-between; }
+        }
     </style>
 </head>
-<body>
+<body class="<?= $uiStyle === 'concept' ? 'ui-concept' : 'ui-classic' ?>">
 <div class="container py-4">
     <div class="app-shell">
         <div class="hero">
@@ -240,14 +277,87 @@ if ($view === 'audit' && $canViewAudit) {
                 <h1 class="h4 mb-1">Benvenuto nel sistema di controllo accessi</h1>
                 <p class="mb-0 text-muted">Registra rapidamente ingressi e uscite dei visitatori con firme digitali sicure.</p>
             </div>
-            <div class="ms-auto text-muted small text-end">
-                Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
+            <div class="ms-auto text-muted small text-end d-flex flex-column align-items-end gap-2">
+                <div>Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
                 Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong><br>
-                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong>
+                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong></div>
+                <div class="concept-toggle">
+                    <a class="btn btn-sm<?= $uiStyle === 'classic' ? ' btn-primary' : ' btn-outline-secondary' ?>" href="<?= htmlspecialchars(buildUrl(['ui' => 'classic']), ENT_QUOTES, 'UTF-8') ?>">UI classica</a>
+                    <a class="btn btn-sm<?= $uiStyle === 'concept' ? ' btn-success' : ' btn-outline-secondary' ?>" href="<?= htmlspecialchars(buildUrl(['ui' => 'concept']), ENT_QUOTES, 'UTF-8') ?>">UI alternativa</a>
+                </div>
             </div>
         </div>
 
         <div class="p-4">
+            <?php if ($uiStyle === 'concept'): ?>
+                <div class="concept-lab mb-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            <div class="text-muted small">Laboratorio UI</div>
+                            <h5 class="mb-1">Proposte alternative per l’interfaccia</h5>
+                            <div class="text-muted small">Esplora variazioni di layout, chips e timeline per presentare i dati in modo narrativo.</div>
+                        </div>
+                        <div class="concept-chip success">Moodboard attiva</div>
+                    </div>
+                    <div class="concept-grid">
+                        <div class="concept-card">
+                            <div class="spark"></div>
+                            <div class="concept-chip mb-2">Pannello ibrido</div>
+                            <div class="concept-bullet">Header con badge di contesto e CTA principali.</div>
+                            <div class="concept-pill-list">
+                                <span class="badge bg-success">Timeline ingressi</span>
+                                <span class="badge bg-primary">Card laterali</span>
+                                <span class="badge bg-secondary">CTA fluttuanti</span>
+                            </div>
+                            <ul class="concept-mini-timeline">
+                                <?php if (count($activeVisits) > 0): ?>
+                                    <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                                <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
+                                            </div>
+                                            <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>
+                                        <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
+                                        <span class="meta">—</span>
+                                    </li>
+                                <?php endif; ?>
+                            </ul>
+                        </div>
+                        <div class="concept-card">
+                            <div class="spark green"></div>
+                            <div class="concept-chip success mb-2">Palette narrativa</div>
+                            <p class="mb-2 small">Fondali sfumati e cards stratificate per dare profondità senza perdere leggibilità.</p>
+                            <ul class="list-unstyled small">
+                                <li class="concept-bullet">Comparti “ingresso/uscita” con tag colorati.</li>
+                                <li class="concept-bullet">Badge ruoli per segmentare i pannelli.</li>
+                                <li class="concept-bullet">CTA evidenziate in chiave neon (verde/blu).</li>
+                            </ul>
+                            <div class="concept-pill-list">
+                                <span class="badge bg-info">Glass effect</span>
+                                <span class="badge bg-success">Gradienti morbidi</span>
+                                <span class="badge bg-primary">Contrast helper</span>
+                            </div>
+                        </div>
+                        <div class="concept-card">
+                            <div class="concept-chip ghost mb-2">Widget rapidi</div>
+                            <p class="mb-1 small">Mini-schedine per vedere e agire senza aprire modali.</p>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div>
+                                    <div class="text-muted small">Presenti ora</div>
+                                    <h4 class="mb-0"><?= count($activeVisits) ?></h4>
+                                </div>
+                                <span class="badge bg-primary">Realtime</span>
+                            </div>
+                            <div class="text-muted small">Idea: pulsanti rapidi per chiudere visite o segnalare ospiti VIP direttamente dalla lista.</div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
                 <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
