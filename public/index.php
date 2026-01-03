@@ -54,6 +54,10 @@ $historyFilters = [
 ];
 $view = $_GET['view'] ?? 'home';
 [$performedBy, $ipAddress] = [$config->appUser, $_SERVER['REMOTE_ADDR'] ?? 'unknown'];
+$assetBase = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+if ($assetBase === '' || $assetBase === '.' || $assetBase === '/') {
+    $assetBase = '';
+}
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];

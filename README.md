@@ -46,6 +46,7 @@ Poi apri `http://localhost:8000`.
 1. Imposta `.env` (o variabili del sistema) con `APP_ENV=local` e, se vuoi forzare i permessi, `APP_SIMULATE_ROLE=admin` (o `operator` / `user`).
 2. Facoltativo: imposta `APP_USER` per personalizzare il nome salvato nei log di audit.
 3. Avvia l’app con il server built-in: `php -S 0.0.0.0:8000 -t public public/index.php`.
+4. Assicurati che la root di pubblicazione sia `public/` (necessario per caricare correttamente CSS/JS).
 
 ### Ambiente di test su IIS (Windows Authentication)
 1. Configura il sito con document root su `public/`.
@@ -55,6 +56,7 @@ Poi apri `http://localhost:8000`.
    - `APP_USER=%REMOTE_USER%` (o `%AUTH_USER%`) per salvare nei log l’utente Windows autenticato.
    - `USER_GROUPS` con i gruppi AD dell’utente separati da `;` per sbloccare le viste operator/admin.
 4. Assicurati che l’utente del pool abbia permessi di lettura/scrittura su `storage/database.sqlite`.
+5. Verifica che il sito punti a `public/` come document root, così gli asset (`/assets/css`, `/assets/js`) siano raggiungibili.
 
 ### Produzione su IIS (Windows Authentication)
 1. Replica la configurazione di test con `APP_ENV=production` (o un profilo dedicato, es. `APP_ENV_PROFILE=prod` per caricare `.env.prod`).

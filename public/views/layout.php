@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Controllo Accessi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/styles.css" rel="stylesheet">
+    <link href="<?= htmlspecialchars($assetBase . '/assets/css/styles.css', ENT_QUOTES, 'UTF-8') ?>" rel="stylesheet">
 </head>
 <body class="ui-concept">
 <div class="container py-4">
@@ -30,6 +30,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="<?= htmlspecialchars($assetBase . '/assets/js/app.js', ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>
