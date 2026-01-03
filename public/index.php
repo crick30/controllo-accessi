@@ -29,6 +29,12 @@ function isPost(array $server): bool
     return ($server['REQUEST_METHOD'] ?? 'GET') === 'POST';
 }
 
+function buildUrl(array $params): string
+{
+    $merged = array_merge($_GET, $params);
+    return '?' . http_build_query($merged);
+}
+
 function activeTheme(Config\AppConfig $config): string
 {
     if ($config->themeMode === 'dark') {
@@ -53,6 +59,7 @@ $historyFilters = [
     'status' => trim($_GET['h_status'] ?? 'all'),
 ];
 $view = $_GET['view'] ?? 'home';
+$uiStyle = 'concept';
 [$performedBy, $ipAddress] = [$config->appUser, $_SERVER['REMOTE_ADDR'] ?? 'unknown'];
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
@@ -81,6 +88,10 @@ if (isPost($_SERVER)) {
 $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisits($filters) : [];
 $auditLogs = $accessControl->canViewAuditLogs() ? $auditLogger->latest() : [];
 $historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
+$activeCount = count($activeVisits);
+$historyCount = count($historyVisits);
+$latestHistory = array_slice($historyVisits, 0, 4);
+$lastAudit = $auditLogs[0] ?? null;
 
 if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
     $auditLogger->log(null, 'Export lista presenti', 'Records: ' . count($activeVisits), $performedBy, $ipAddress);
@@ -196,6 +207,7 @@ if ($view === 'audit' && $canViewAudit) {
         }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         a { color: var(--color-primary); }
+        body.ui-concept { background: radial-gradient(circle at 10% 20%, rgba(4, 118, 244, 0.08), transparent 28%), radial-gradient(circle at 90% 10%, rgba(51, 225, 161, 0.12), transparent 26%), radial-gradient(circle at 70% 80%, rgba(233, 10, 7, 0.06), transparent 30%), var(--bg); }
         .app-shell { background: var(--card); box-shadow: 0 20px 60px var(--border); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
         .hero { background: var(--color-surface); padding: 28px; display: flex; align-items: center; gap: 16px; }
         .logo-mark { width: 54px; height: 54px; border-radius: 12px; background: var(--color-primary); display: grid; place-items: center; color: #FFFFFF; font-weight: 800; font-size: 22px; box-shadow: 0 0 0 1px var(--border); }
@@ -229,9 +241,40 @@ if ($view === 'audit' && $canViewAudit) {
         .alert-success { background: var(--color-success); border-color: var(--color-success); color: #000000; }
         .alert-info { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
         .alert-warning { background: var(--color-border); border-color: var(--color-border); color: var(--color-text-primary); }
+        /* Alternative UI */
+        .ui-concept .app-shell { border: 1px solid rgba(4, 118, 244, 0.35); box-shadow: 0 25px 80px rgba(0,0,0,0.2); }
+        .ui-concept .hero { border-bottom: 1px dashed var(--border); position: relative; overflow: hidden; }
+        .ui-concept .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(4,118,244,0.08), rgba(51,225,161,0.05)); pointer-events: none; }
+        .ui-concept .logo-mark { box-shadow: 0 10px 30px rgba(4,118,244,0.35); }
+        .concept-lab { border: 1px dashed var(--border); border-radius: 14px; padding: 16px; background: linear-gradient(135deg, rgba(4, 118, 244, 0.04), rgba(51, 225, 161, 0.05)); }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+        .concept-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; }
+        .concept-card small { color: var(--muted); }
+        .concept-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(4, 118, 244, 0.12); color: var(--text); font-weight: 600; }
+        .concept-chip.success { background: rgba(51, 225, 161, 0.18); }
+        .concept-card .spark { position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(4,118,244,0.18), transparent 60%); top: -28px; right: -32px; opacity: 0.7; }
+        .concept-mini-timeline { list-style: none; padding-left: 0; margin: 10px 0 0 0; }
+        .concept-mini-timeline li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--color-surface); }
+        .concept-mini-timeline .meta { color: var(--muted); font-size: 12px; }
+        .concept-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+        .concept-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
+        .concept-stat strong { font-size: 22px; }
+        .concept-stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .concept-stat .signal { width: 34px; height: 34px; border-radius: 10px; background: rgba(4,118,244,0.12); display: grid; place-items: center; color: var(--color-primary); font-weight: 700; }
+        .concept-stat.success .signal { background: rgba(51,225,161,0.18); color: #0f5132; }
+        .concept-stat.orange .signal { background: rgba(255, 159, 64, 0.16); color: #d9822b; }
+        .concept-stat::after { content: \"\"; position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(4,118,244,0.12), transparent 60%); top: -20px; right: -30px; }
+        .concept-stat.success::after { background: radial-gradient(circle, rgba(51,225,161,0.16), transparent 60%); }
+        .concept-cta { display: flex; flex-wrap: wrap; gap: 8px; }
+        .concept-cta .btn { border-radius: 10px; }
+        .concept-section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .concept-badge { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; }
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
-<body>
+<body class="ui-concept">
 <div class="container py-4">
     <div class="app-shell">
         <div class="hero">
@@ -240,14 +283,108 @@ if ($view === 'audit' && $canViewAudit) {
                 <h1 class="h4 mb-1">Benvenuto nel sistema di controllo accessi</h1>
                 <p class="mb-0 text-muted">Registra rapidamente ingressi e uscite dei visitatori con firme digitali sicure.</p>
             </div>
-            <div class="ms-auto text-muted small text-end">
-                Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
+            <div class="ms-auto text-muted small text-end d-flex flex-column align-items-end gap-2">
+                <div>Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
                 Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong><br>
-                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong>
+                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong></div>
+                <div class="concept-chip success">UI alternativa attiva</div>
             </div>
         </div>
 
         <div class="p-4">
+            <div class="concept-lab mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <h5 class="mb-0">Dashboard alternativa</h5>
+                        <div class="text-muted small">Accessi e movimenti in sintesi.</div>
+                    </div>
+                </div>
+                <div class="concept-stats">
+                    <div class="concept-stat success">
+                        <div class="signal">A</div>
+                        <div>
+                            <div class="label">Presenti adesso</div>
+                            <strong><?= $activeCount ?></strong>
+                        </div>
+                    </div>
+                    <div class="concept-stat">
+                        <div class="signal">H</div>
+                        <div>
+                            <div class="label">Accessi filtrati</div>
+                            <strong><?= $historyCount ?></strong>
+                        </div>
+                    </div>
+                    <div class="concept-stat orange">
+                        <div class="signal">L</div>
+                        <div>
+                            <div class="label">Ultima azione</div>
+                            <strong><?= ($lastAudit && $canViewAudit) ? htmlspecialchars($lastAudit['action'], ENT_QUOTES, 'UTF-8') : 'N/D' ?></strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="spark"></div>
+                        <div class="concept-section-title mb-2">
+                            <div>
+                                <div class="text-muted small">Timeline immediata</div>
+                                <h6 class="mb-0">Ultimi ingressi</h6>
+                            </div>
+                            <span class="concept-badge">Oggi</span>
+                        </div>
+                        <ul class="concept-mini-timeline">
+                            <?php if ($activeCount > 0): ?>
+                                <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
+                                    <li>
+                                        <div>
+                                            <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                            <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
+                                        </div>
+                                        <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li>
+                                    <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
+                                    <span class="meta">—</span>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                            <div class="concept-cta mt-2">
+                                <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars(buildUrl(['view' => 'home']), ENT_QUOTES, 'UTF-8') ?>">Registra nuovo ingresso</a>
+                                <a class="btn btn-sm btn-outline-secondary<?= $canViewActive ? '' : ' disabled' ?>" href="<?= $canViewActive ? htmlspecialchars(buildUrl(['export' => 'active_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta presenti</a>
+                            </div>
+                        </div>
+                    <div class="concept-card">
+                        <div class="concept-section-title mb-2">
+                            <div>
+                                <div class="text-muted small">Ultimi movimenti</div>
+                                <h6 class="mb-0">Storico rapido</h6>
+                            </div>
+                            <span class="concept-badge">Ultimi 4</span>
+                        </div>
+                        <?php if (count($latestHistory) > 0): ?>
+                            <ul class="concept-mini-timeline">
+                                <?php foreach ($latestHistory as $visit): ?>
+                                    <li>
+                                        <div>
+                                            <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                            <span class="meta"><?= $visit['exit_time'] ? 'Uscito' : 'Presente' ?> · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        </div>
+                                        <span class="meta"><?= date('d/m H:i', strtotime($visit['entry_time'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <div class="text-muted small">Nessun dato storico disponibile con i filtri correnti.</div>
+                        <?php endif; ?>
+                        <div class="concept-cta mt-2">
+                            <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['view' => 'history']), ENT_QUOTES, 'UTF-8') : '#' ?>">Vai alla lista accessi</a>
+                            <a class="btn btn-sm btn-outline-success<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['export' => 'history_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
                 <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
