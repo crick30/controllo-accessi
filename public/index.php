@@ -59,6 +59,11 @@ if ($assetBase === '' || $assetBase === '.' || $assetBase === '/') {
     $assetBase = '';
 }
 
+$documentRoot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
+if ($assetBase === '' && $documentRoot !== '' && is_dir($documentRoot . '/public/assets')) {
+    $assetBase = '/public';
+}
+
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];
 }
