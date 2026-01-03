@@ -14,6 +14,8 @@ class AppConfig
     public int $lightStartHour;
     public int $lightEndHour;
     public string $appUser;
+    public string $logPath;
+    public string $logLevel;
 
     public function __construct(array $data)
     {
@@ -27,6 +29,8 @@ class AppConfig
         $this->lightStartHour = (int) ($data['light_start_hour'] ?? 7);
         $this->lightEndHour = (int) ($data['light_end_hour'] ?? 19);
         $this->appUser = $data['app_user'] ?? 'system';
+        $this->logPath = $data['log_path'] ?? dirname(__DIR__, 2) . '/../controllo-accessi-logs/app.log';
+        $this->logLevel = $data['log_level'] ?? 'info';
     }
 
     public function isLocal(): bool

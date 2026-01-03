@@ -20,4 +20,7 @@ return [
     'light_end_hour' => getenv('APP_LIGHT_END') ?: 19,
     // User performing actions (for audit logging, e.g., SSO username).
     'app_user' => getenv('APP_USER') ?: (getenv('USER') ?: 'system'),
+    // Log configuration: file path (outside project root by default) and verbosity (error, warning, info, debug).
+    'log_path' => getenv('APP_LOG_PATH') ?: dirname(__DIR__) . '/controllo-accessi-logs/app.log',
+    'log_level' => getenv('APP_LOG_LEVEL') ?: 'info',
 ];
