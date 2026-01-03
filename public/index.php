@@ -89,9 +89,11 @@ $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisit
 $auditLogs = $accessControl->canViewAuditLogs() ? $auditLogger->latest() : [];
 $historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
 $activeCount = count($activeVisits);
-$historyCount = count($historyVisits);
-$latestHistory = array_slice($historyVisits, 0, 4);
-$lastAudit = $auditLogs[0] ?? null;
+$recentExits = array_slice(
+    array_values(array_filter($historyVisits, fn($visit) => !empty($visit['exit_time']))),
+    0,
+    5
+);
 
 if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
     $auditLogger->log(null, 'Export lista presenti', 'Records: ' . count($activeVisits), $performedBy, $ipAddress);
@@ -283,11 +285,12 @@ if ($view === 'audit' && $canViewAudit) {
                 <h1 class="h4 mb-1">Benvenuto nel sistema di controllo accessi</h1>
                 <p class="mb-0 text-muted">Registra rapidamente ingressi e uscite dei visitatori con firme digitali sicure.</p>
             </div>
-            <div class="ms-auto text-muted small text-end d-flex flex-column align-items-end gap-2">
-                <div>Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
-                Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong><br>
-                Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong></div>
-                <div class="concept-chip success">UI alternativa attiva</div>
+            <div class="ms-auto d-flex flex-column align-items-end gap-2">
+                <div class="concept-cta">
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#entryModal">Registra nuovo ingresso</button>
+                    <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $canViewAudit ? '' : ' disabled' ?>" href="<?= $canViewAudit ? '?view=audit' : '#' ?>">Log di audit</a>
+                </div>
             </div>
         </div>
 
@@ -304,21 +307,7 @@ if ($view === 'audit' && $canViewAudit) {
                         <div class="signal">A</div>
                         <div>
                             <div class="label">Presenti adesso</div>
-                            <strong><?= $activeCount ?></strong>
-                        </div>
-                    </div>
-                    <div class="concept-stat">
-                        <div class="signal">H</div>
-                        <div>
-                            <div class="label">Accessi filtrati</div>
-                            <strong><?= $historyCount ?></strong>
-                        </div>
-                    </div>
-                    <div class="concept-stat orange">
-                        <div class="signal">L</div>
-                        <div>
-                            <div class="label">Ultima azione</div>
-                            <strong><?= ($lastAudit && $canViewAudit) ? htmlspecialchars($lastAudit['action'], ENT_QUOTES, 'UTF-8') : 'N/D' ?></strong>
+                            <strong><?= $canViewActive ? $activeCount : '—' ?></strong>
                         </div>
                     </div>
                 </div>
@@ -330,66 +319,66 @@ if ($view === 'audit' && $canViewAudit) {
                                 <div class="text-muted small">Timeline immediata</div>
                                 <h6 class="mb-0">Ultimi ingressi</h6>
                             </div>
-                            <span class="concept-badge">Oggi</span>
+                            <span class="concept-badge">Presenti</span>
                         </div>
-                        <ul class="concept-mini-timeline">
-                            <?php if ($activeCount > 0): ?>
-                                <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
+                        <?php if (!$canViewActive): ?>
+                            <div class="text-muted small">Accesso alla lista consentito solo a operatori o admin autorizzati.</div>
+                        <?php else: ?>
+                            <ul class="concept-mini-timeline">
+                                <?php if ($activeCount > 0): ?>
+                                    <?php foreach ($activeVisits as $visit): ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                                <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
+                                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#exitModal" data-visit-id="<?= $visit['id'] ?>" data-visitor-name="<?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?>">Registra uscita</button>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
                                     <li>
-                                        <div>
-                                            <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
-                                            <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
-                                        </div>
-                                        <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
+                                        <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
+                                        <span class="meta">—</span>
                                     </li>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <li>
-                                    <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
-                                    <span class="meta">—</span>
-                                </li>
-                            <?php endif; ?>
-                        </ul>
-                            <div class="concept-cta mt-2">
-                                <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars(buildUrl(['view' => 'home']), ENT_QUOTES, 'UTF-8') ?>">Registra nuovo ingresso</a>
-                                <a class="btn btn-sm btn-outline-secondary<?= $canViewActive ? '' : ' disabled' ?>" href="<?= $canViewActive ? htmlspecialchars(buildUrl(['export' => 'active_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta presenti</a>
-                            </div>
+                                <?php endif; ?>
+                            </ul>
+                        <?php endif; ?>
+                        <div class="concept-cta mt-2">
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#entryModal">Registra nuovo ingresso</button>
                         </div>
+                    </div>
                     <div class="concept-card">
                         <div class="concept-section-title mb-2">
                             <div>
                                 <div class="text-muted small">Ultimi movimenti</div>
                                 <h6 class="mb-0">Storico rapido</h6>
                             </div>
-                            <span class="concept-badge">Ultimi 4</span>
+                            <span class="concept-badge">Ultimi 5 usciti</span>
                         </div>
-                        <?php if (count($latestHistory) > 0): ?>
+                        <?php if (!$canViewHistory): ?>
+                            <div class="text-muted small">Accesso allo storico consentito solo a operatori o admin autorizzati.</div>
+                        <?php elseif (count($recentExits) > 0): ?>
                             <ul class="concept-mini-timeline">
-                                <?php foreach ($latestHistory as $visit): ?>
+                                <?php foreach ($recentExits as $visit): ?>
                                     <li>
                                         <div>
                                             <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
-                                            <span class="meta"><?= $visit['exit_time'] ? 'Uscito' : 'Presente' ?> · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="meta">Uscito · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
                                         </div>
-                                        <span class="meta"><?= date('d/m H:i', strtotime($visit['entry_time'])) ?></span>
+                                        <span class="meta"><?= $visit['exit_time'] ? date('d/m H:i', strtotime($visit['exit_time'])) : '—' ?></span>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
                         <?php else: ?>
                             <div class="text-muted small">Nessun dato storico disponibile con i filtri correnti.</div>
                         <?php endif; ?>
-                        <div class="concept-cta mt-2">
-                            <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['view' => 'history']), ENT_QUOTES, 'UTF-8') : '#' ?>">Vai alla lista accessi</a>
-                            <a class="btn btn-sm btn-outline-success<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['export' => 'history_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta CSV</a>
-                        </div>
                     </div>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
-                <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
-                <a class="btn btn-outline-primary<?= $view === 'audit' ? ' active' : '' ?><?= $canViewAudit ? '' : ' disabled' ?>" href="<?= $canViewAudit ? '?view=audit' : '#' ?>">Log di audit</a>
-            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3"></div>
 
             <?php if ($errors): ?>
                 <div class="alert alert-danger">
@@ -407,104 +396,7 @@ if ($view === 'audit' && $canViewAudit) {
                 <div id="alert-exit" class="alert alert-info"><?= htmlspecialchars($exitGreeting, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
 
-            <?php if ($view === 'home'): ?>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="section-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <div class="text-muted small">Ingresso rapido</div>
-                                <h5 class="mb-0">Registra accesso</h5>
-                            </div>
-                            <span class="badge bg-success bg-gradient badge-pill">Oggi <?= date('d/m/Y') ?></span>
-                        </div>
-                        <form method="POST" id="entry-form">
-                            <input type="hidden" name="form_type" value="entry">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nome *</label>
-                                    <input type="text" class="form-control" name="first_name" required placeholder="Mario">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Cognome *</label>
-                                    <input type="text" class="form-control" name="last_name" required placeholder="Rossi">
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Azienda (facoltativa)</label>
-                                    <input type="text" class="form-control" name="company" placeholder="Acme S.p.A.">
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Referente interno *</label>
-                                    <input type="text" class="form-control" name="host_last_name" required placeholder="Cognome referente">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Firma di entrata *</label>
-                                    <canvas id="entrySignature" class="signature-pad"></canvas>
-                                    <input type="hidden" name="entry_signature" id="entrySignatureData" required>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearEntrySignature">Pulisci firma</button>
-                                    </div>
-                                </div>
-                                <div class="col-12 d-flex justify-content-between align-items-center">
-                                    <div class="text-muted small">L'orario di entrata viene salvato automaticamente.</div>
-                                    <button type="submit" class="btn btn-primary">Conferma ingresso</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="section-card h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <div class="text-muted small">Monitoraggio in tempo reale</div>
-                                <h5 class="mb-0">Visitatori presenti</h5>
-                            </div>
-                            <?php if (!$config->isLocal()): ?>
-                                <span class="badge bg-primary bg-gradient badge-pill">Accesso controllato</span>
-                            <?php else: ?>
-                                <span class="badge bg-secondary bg-gradient badge-pill">Accesso locale</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php if ($canViewActive): ?>
-                            <?php if (count($activeVisits) === 0): ?>
-                                <div class="text-muted">Nessun visitatore presente al momento.</div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0 table-modern">
-                                        <thead>
-                                            <tr>
-                                                <th>Nome</th>
-                                                <th>Azienda</th>
-                                                <th>Referente</th>
-                                                <th>Entrata</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        <?php foreach ($activeVisits as $visit): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                                                <td><?= htmlspecialchars($visit['company'] ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
-                                                <td><?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                                                <td><?= date('d/m/Y H:i', strtotime($visit['entry_time'])) ?></td>
-                                                <td class="text-end">
-                                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#exitModal" data-visit-id="<?= $visit['id'] ?>" data-visitor-name="<?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?>">Registra uscita</button>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <div class="alert alert-warning mb-0">Accesso alla lista consentito solo a operatori o admin autorizzati.</div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <?php elseif ($view === 'history' && $canViewHistory): ?>
+            <?php if ($view === 'history' && $canViewHistory): ?>
                 <div class="section-card mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
@@ -613,6 +505,55 @@ if ($view === 'audit' && $canViewAudit) {
                     </div>
                 </div>
             <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="entryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Registra nuovo ingresso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" id="entry-form">
+                <input type="hidden" name="form_type" value="entry">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" name="first_name" required placeholder="Mario">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cognome *</label>
+                            <input type="text" class="form-control" name="last_name" required placeholder="Rossi">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Azienda (facoltativa)</label>
+                            <input type="text" class="form-control" name="company" placeholder="Acme S.p.A.">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Referente interno *</label>
+                            <input type="text" class="form-control" name="host_last_name" required placeholder="Cognome referente">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Firma di entrata *</label>
+                            <canvas id="entrySignature" class="signature-pad"></canvas>
+                            <input type="hidden" name="entry_signature" id="entrySignatureData" required>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearEntrySignature">Pulisci firma</button>
+                            </div>
+                        </div>
+                        <div class="col-12 text-muted small">
+                            L'orario di entrata viene salvato automaticamente.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Conferma ingresso</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
