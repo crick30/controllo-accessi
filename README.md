@@ -8,7 +8,7 @@ Applicazione PHP (senza framework) per registrare ingressi/uscite visitatori con
 
 ## Avvio rapido
 ```bash
-php -S 0.0.0.0:8000 index.php
+php -S 0.0.0.0:8000 -t public public/index.php
 ```
 Poi apri `http://localhost:8000`.
 
@@ -28,7 +28,10 @@ Poi apri `http://localhost:8000`.
 - Tema light/dark personalizzabile o auto.
 
 ## Struttura cartelle
-- `public/index.php`: front controller + UI.
+- `public/index.php`: front controller; include i template in `public/views/`.
+- `public/views/`: layout e partial PHP/HTML.
+- `public/assets/css/styles.css`: tutti gli stili dell’interfaccia.
+- `public/assets/js/app.js`: logica per firme digitali e interazioni UI.
 - `src/`: servizi, repository, config, infrastruttura DB.
 - `bootstrap.php`: autoload semplice + configurazione.
 
@@ -37,5 +40,24 @@ Poi apri `http://localhost:8000`.
 - Lista accessi: solo operator/admin (o simulazione), accesso tramite pulsante.
 - Log di audit: solo admin (o simulazione), accesso tramite pulsante.
 
-## Nota per il deploy
-Configura un webserver che punti a `public/` come document root; `index.php` root è solo un forwarder per il server built-in.
+## Modalità di configurazione per ambienti diversi
+
+### Simulazione locale (senza AD/Windows Authentication)
+1. Imposta `.env` (o variabili del sistema) con `APP_ENV=local` e, se vuoi forzare i permessi, `APP_SIMULATE_ROLE=admin` (o `operator` / `user`).
+2. Facoltativo: imposta `APP_USER` per personalizzare il nome salvato nei log di audit.
+3. Avvia l’app con il server built-in: `php -S 0.0.0.0:8000 -t public public/index.php`.
+
+### Ambiente di test su IIS (Windows Authentication)
+1. Configura il sito con document root su `public/`.
+2. Abilita **Windows Authentication** e disabilita (o limita) l’accesso anonimo.
+3. Esponi a PHP le variabili d’ambiente necessarie (ad esempio via `web.config` o FastCGI):
+   - `APP_ENV=test` (o `production` se usi un unico profilo).
+   - `APP_USER=%REMOTE_USER%` (o `%AUTH_USER%`) per salvare nei log l’utente Windows autenticato.
+   - `USER_GROUPS` con i gruppi AD dell’utente separati da `;` per sbloccare le viste operator/admin.
+4. Assicurati che l’utente del pool abbia permessi di lettura/scrittura su `storage/database.sqlite`.
+
+### Produzione su IIS (Windows Authentication)
+1. Replica la configurazione di test con `APP_ENV=production` (o un profilo dedicato, es. `APP_ENV_PROFILE=prod` per caricare `.env.prod`).
+2. Mantieni `APP_USER` alimentato dai dati di Windows Authentication per la tracciabilità.
+3. Popola `USER_GROUPS` dai gruppi AD effettivi (operator/admin) oppure gestisci il mapping tramite un modulo SSO che compili le variabili d’ambiente.
+4. Imposta `APP_THEME`/`APP_LIGHT_*` secondo la policy aziendale e verifica che il sito punti a `public/` per servire correttamente asset CSS/JS.
