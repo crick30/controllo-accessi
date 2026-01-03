@@ -247,6 +247,7 @@ extract($viewData);
                         <span class="badge bg-primary bg-gradient badge-pill">Operatori / Admin</span>
                     </div>
                     <form class="row g-2 mb-3" method="GET">
+                        <input type="hidden" name="view" value="history">
                         <div class="col-md-3">
                             <input type="text" name="h_search" value="<?= htmlspecialchars($historyFilters['search'], ENT_QUOTES, 'UTF-8') ?>" class="form-control" placeholder="Cerca nome, azienda, referente">
                         </div>
