@@ -59,7 +59,7 @@ $historyFilters = [
     'status' => trim($_GET['h_status'] ?? 'all'),
 ];
 $view = $_GET['view'] ?? 'home';
-$uiStyle = in_array($_GET['ui'] ?? 'classic', ['classic', 'concept'], true) ? $_GET['ui'] : 'classic';
+$uiStyle = 'concept';
 [$performedBy, $ipAddress] = [$config->appUser, $_SERVER['REMOTE_ADDR'] ?? 'unknown'];
 
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
@@ -295,7 +295,7 @@ if ($view === 'audit' && $canViewAudit) {
         }
     </style>
 </head>
-<body class="<?= $uiStyle === 'concept' ? 'ui-concept' : 'ui-classic' ?>">
+<body class="ui-concept">
 <div class="container py-4">
     <div class="app-shell">
         <div class="hero">
@@ -308,144 +308,139 @@ if ($view === 'audit' && $canViewAudit) {
                 <div>Tema: <strong><?= $isDark ? 'Dark' : 'Light' ?></strong><br>
                 Ambiente: <strong><?= htmlspecialchars($config->environment, ENT_QUOTES, 'UTF-8') ?></strong><br>
                 Ruolo simulato: <strong><?= htmlspecialchars($config->simulateRole ?? '—', ENT_QUOTES, 'UTF-8') ?></strong></div>
-                <div class="concept-toggle">
-                    <a class="btn btn-sm<?= $uiStyle === 'classic' ? ' btn-primary' : ' btn-outline-secondary' ?>" href="<?= htmlspecialchars(buildUrl(['ui' => 'classic']), ENT_QUOTES, 'UTF-8') ?>">UI classica</a>
-                    <a class="btn btn-sm<?= $uiStyle === 'concept' ? ' btn-success' : ' btn-outline-secondary' ?>" href="<?= htmlspecialchars(buildUrl(['ui' => 'concept']), ENT_QUOTES, 'UTF-8') ?>">UI alternativa</a>
-                </div>
+                <div class="concept-chip success">UI alternativa attiva</div>
             </div>
         </div>
 
-            <div class="p-4">
-            <?php if ($uiStyle === 'concept'): ?>
-                <div class="concept-lab mb-3">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="p-4">
+            <div class="concept-lab mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <div class="text-muted small">Laboratorio UI · Versione finale</div>
+                        <h5 class="mb-1">Esperienza narrativa e dati pronti all’azione</h5>
+                        <div class="text-muted small">Un’unica interfaccia alternativa con statistiche, timeline e suggerimenti operativi.</div>
+                    </div>
+                    <div class="concept-chip success">Concept stabile</div>
+                </div>
+                <div class="concept-stats">
+                    <div class="concept-stat success">
+                        <div class="signal">A</div>
                         <div>
-                            <div class="text-muted small">Laboratorio UI · Versione 2</div>
-                            <h5 class="mb-1">Esperienza narrativa e dati pronti all’azione</h5>
-                            <div class="text-muted small">Questa bozza mostra come presentare statistiche, timeline e suggerimenti operativi in modo compatto.</div>
-                        </div>
-                        <div class="concept-chip success">Concept attivo</div>
-                    </div>
-                    <div class="concept-stats">
-                        <div class="concept-stat success">
-                            <div class="signal">A</div>
-                            <div>
-                                <div class="label">Presenti adesso</div>
-                                <strong><?= $activeCount ?></strong>
-                            </div>
-                        </div>
-                        <div class="concept-stat">
-                            <div class="signal">H</div>
-                            <div>
-                                <div class="label">Accessi filtrati</div>
-                                <strong><?= $historyCount ?></strong>
-                            </div>
-                        </div>
-                        <div class="concept-stat orange">
-                            <div class="signal">L</div>
-                            <div>
-                                <div class="label">Ultima azione</div>
-                                <strong><?= ($lastAudit && $canViewAudit) ? htmlspecialchars($lastAudit['action'], ENT_QUOTES, 'UTF-8') : 'N/D' ?></strong>
-                            </div>
+                            <div class="label">Presenti adesso</div>
+                            <strong><?= $activeCount ?></strong>
                         </div>
                     </div>
-                    <div class="concept-grid">
-                        <div class="concept-card">
-                            <div class="spark"></div>
-                            <div class="concept-section-title mb-2">
-                                <div>
-                                    <div class="text-muted small">Timeline immediata</div>
-                                    <h6 class="mb-0">Ultimi ingressi</h6>
-                                </div>
-                                <span class="concept-badge">V2</span>
-                            </div>
-                            <ul class="concept-mini-timeline">
-                                <?php if ($activeCount > 0): ?>
-                                    <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
-                                        <li>
-                                            <div>
-                                                <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
-                                                <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
-                                            </div>
-                                            <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <li>
-                                        <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
-                                        <span class="meta">—</span>
-                                    </li>
-                                <?php endif; ?>
-                            </ul>
-                            <div class="concept-cta mt-2">
-                                <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars(buildUrl(['view' => 'home']), ENT_QUOTES, 'UTF-8') ?>">Registra nuovo ingresso</a>
-                                <a class="btn btn-sm btn-outline-secondary<?= $canViewActive ? '' : ' disabled' ?>" href="<?= $canViewActive ? htmlspecialchars(buildUrl(['export' => 'active_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta presenti</a>
-                            </div>
+                    <div class="concept-stat">
+                        <div class="signal">H</div>
+                        <div>
+                            <div class="label">Accessi filtrati</div>
+                            <strong><?= $historyCount ?></strong>
                         </div>
-                        <div class="concept-card compact">
-                            <div class="spark green"></div>
-                            <div class="concept-section-title mb-2">
-                                <div>
-                                    <div class="text-muted small">Stato operativo</div>
-                                    <h6 class="mb-0">Slot rapidi</h6>
-                                </div>
-                                <span class="concept-chip ghost">Idee v2</span>
-                            </div>
-                            <ul class="concept-list">
-                                <li>
-                                    <div>
-                                        <strong>Firma istantanea</strong><br>
-                                        <span class="meta">CTA per apertura modale uscita/ingresso con firma pre-selezionata.</span>
-                                    </div>
-                                    <span class="status live">Proposta</span>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Badge ruoli</strong><br>
-                                        <span class="meta">Etichette per admin/operatori visibili nelle liste.</span>
-                                    </div>
-                                    <span class="status active">Mock</span>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Alert turnover</strong><br>
-                                        <span class="meta">Segnala se un visitatore è dentro da oltre X ore.</span>
-                                    </div>
-                                    <span class="status idle">Backlog</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="concept-card">
-                            <div class="concept-section-title mb-2">
-                                <div>
-                                    <div class="text-muted small">Ultimi movimenti</div>
-                                    <h6 class="mb-0">Storico rapido</h6>
-                                </div>
-                                <span class="concept-chip muted">Solo anteprima</span>
-                            </div>
-                            <?php if (count($latestHistory) > 0): ?>
-                                <ul class="concept-mini-timeline">
-                                    <?php foreach ($latestHistory as $visit): ?>
-                                        <li>
-                                            <div>
-                                                <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
-                                                <span class="meta"><?= $visit['exit_time'] ? 'Uscito' : 'Presente' ?> · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
-                                            </div>
-                                            <span class="meta"><?= date('d/m H:i', strtotime($visit['entry_time'])) ?></span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            <?php else: ?>
-                                <div class="text-muted small">Nessun dato storico disponibile con i filtri correnti.</div>
-                            <?php endif; ?>
-                            <div class="concept-cta mt-2">
-                                <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['view' => 'history']), ENT_QUOTES, 'UTF-8') : '#' ?>">Vai alla lista accessi</a>
-                                <a class="btn btn-sm btn-outline-success<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['export' => 'history_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta CSV</a>
-                            </div>
+                    </div>
+                    <div class="concept-stat orange">
+                        <div class="signal">L</div>
+                        <div>
+                            <div class="label">Ultima azione</div>
+                            <strong><?= ($lastAudit && $canViewAudit) ? htmlspecialchars($lastAudit['action'], ENT_QUOTES, 'UTF-8') : 'N/D' ?></strong>
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <div class="spark"></div>
+                        <div class="concept-section-title mb-2">
+                            <div>
+                                <div class="text-muted small">Timeline immediata</div>
+                                <h6 class="mb-0">Ultimi ingressi</h6>
+                            </div>
+                            <span class="concept-badge">V2 finale</span>
+                        </div>
+                        <ul class="concept-mini-timeline">
+                            <?php if ($activeCount > 0): ?>
+                                <?php foreach (array_slice($activeVisits, 0, 3) as $visit): ?>
+                                    <li>
+                                        <div>
+                                            <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                            <span class="meta"><?= htmlspecialchars($visit['company'] ?? 'Visitatore', ENT_QUOTES, 'UTF-8') ?></span>
+                                        </div>
+                                        <span class="meta"><?= date('H:i', strtotime($visit['entry_time'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li>
+                                    <div><strong>Nessuna presenza</strong><br><span class="meta">La timeline si popolerà con i prossimi ingressi</span></div>
+                                    <span class="meta">—</span>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                        <div class="concept-cta mt-2">
+                            <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars(buildUrl(['view' => 'home']), ENT_QUOTES, 'UTF-8') ?>">Registra nuovo ingresso</a>
+                            <a class="btn btn-sm btn-outline-secondary<?= $canViewActive ? '' : ' disabled' ?>" href="<?= $canViewActive ? htmlspecialchars(buildUrl(['export' => 'active_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta presenti</a>
+                        </div>
+                    </div>
+                    <div class="concept-card compact">
+                        <div class="spark green"></div>
+                        <div class="concept-section-title mb-2">
+                            <div>
+                                <div class="text-muted small">Stato operativo</div>
+                                <h6 class="mb-0">Slot rapidi</h6>
+                            </div>
+                            <span class="concept-chip ghost">Idee pronte</span>
+                        </div>
+                        <ul class="concept-list">
+                            <li>
+                                <div>
+                                    <strong>Firma istantanea</strong><br>
+                                    <span class="meta">CTA per apertura modale uscita/ingresso con firma pre-selezionata.</span>
+                                </div>
+                                <span class="status live">Pronto</span>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Badge ruoli</strong><br>
+                                    <span class="meta">Etichette per admin/operatori visibili nelle liste.</span>
+                                </div>
+                                <span class="status active">Mock</span>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong>Alert turnover</strong><br>
+                                    <span class="meta">Segnala se un visitatore è dentro da oltre X ore.</span>
+                                </div>
+                                <span class="status idle">Backlog</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="concept-card">
+                        <div class="concept-section-title mb-2">
+                            <div>
+                                <div class="text-muted small">Ultimi movimenti</div>
+                                <h6 class="mb-0">Storico rapido</h6>
+                            </div>
+                            <span class="concept-chip muted">Solo anteprima</span>
+                        </div>
+                        <?php if (count($latestHistory) > 0): ?>
+                            <ul class="concept-mini-timeline">
+                                <?php foreach ($latestHistory as $visit): ?>
+                                    <li>
+                                        <div>
+                                            <strong><?= htmlspecialchars($visit['first_name'] . ' ' . $visit['last_name'], ENT_QUOTES, 'UTF-8') ?></strong><br>
+                                            <span class="meta"><?= $visit['exit_time'] ? 'Uscito' : 'Presente' ?> · <?= htmlspecialchars($visit['host_last_name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        </div>
+                                        <span class="meta"><?= date('d/m H:i', strtotime($visit['entry_time'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <div class="text-muted small">Nessun dato storico disponibile con i filtri correnti.</div>
+                        <?php endif; ?>
+                        <div class="concept-cta mt-2">
+                            <a class="btn btn-sm btn-outline-primary<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['view' => 'history']), ENT_QUOTES, 'UTF-8') : '#' ?>">Vai alla lista accessi</a>
+                            <a class="btn btn-sm btn-outline-success<?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? htmlspecialchars(buildUrl(['export' => 'history_csv']), ENT_QUOTES, 'UTF-8') : '#' ?>">Esporta CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <a class="btn btn-outline-primary<?= $view === 'home' ? ' active' : '' ?>" href="?view=home">Dashboard</a>
                 <a class="btn btn-outline-primary<?= $view === 'history' ? ' active' : '' ?><?= $canViewHistory ? '' : ' disabled' ?>" href="<?= $canViewHistory ? '?view=history' : '#' ?>">Lista accessi</a>
