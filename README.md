@@ -39,9 +39,9 @@ Poi apri `http://localhost:8000`.
 
 ## Guida produzione
 ### Principi base
-- Usa un web server (Apache/Nginx) con PHP-FPM e imposta `public/` come document root. Il file `index.php` nella root serve solo per il server PHP built-in.
+- Usa un web server (IIS, Apache/Nginx) con PHP-FPM/FastCGI e imposta `public/` come document root. Il file `index.php` nella root serve solo per il server PHP built-in.
 - Assicurati che la cartella `storage/` (creata automaticamente accanto a `config.php` alla prima esecuzione) sia scrivibile dal processo PHP: il database SQLite vive qui (`storage/database.sqlite`).
-- In produzione non usare il server integrato: preferisci un VirtualHost/ServerBlock con HTTPS e restrizioni di accesso alla root.
+- In produzione non usare il server integrato: preferisci un VirtualHost/Site con HTTPS e restrizioni di accesso alla root.
 
 ### Prima installazione
 1) **Clona e installa dipendenze PHP** (nessun composer richiesto; basta PHP 8.1+ con SQLite).
@@ -55,7 +55,31 @@ Poi apri `http://localhost:8000`.
    - Imposta `APP_ENV=production` per abilitare i controlli di gruppo.
    - `USER_GROUPS` viene usato solo se non hai una sorgente AD: è la lista di gruppi dell’utente loggato separati da `;`.
    - Per profili differenti crea `.env.production` o esporta `APP_ENV_PROFILE=production`: verrà caricato dopo `.env`.
-3) **Configura il web server** puntando `DocumentRoot` o `root` a `<project>/public` e abilita PHP-FPM. Blocca l’accesso diretto alla root del progetto.
+3) **Configura il web server** puntando `DocumentRoot`/`root`/`Physical Path` a `<project>/public` e abilita PHP-FPM/FastCGI. Blocca l’accesso diretto alla root del progetto.
+
+   **Esempio IIS (FastCGI):**
+   - Installa il modulo PHP per IIS (PHP Manager o configurazione manuale FastCGI) con PHP 8.1+ e SQLite attivo.
+   - Crea un nuovo Site con `Physical Path` su `<project>/public` e binding HTTPS.
+   - Aggiungi una regola di URL Rewrite (o `web.config`) per reindirizzare tutto a `index.php` se non esiste il file:
+     ```xml
+     <configuration>
+       <system.webServer>
+         <rewrite>
+           <rules>
+             <rule name="FrontController" stopProcessing="true">
+               <match url=".*" />
+               <conditions>
+                 <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                 <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+               </conditions>
+               <action type="Rewrite" url="index.php" appendQueryString="true" />
+             </rule>
+           </rules>
+         </rewrite>
+       </system.webServer>
+     </configuration>
+     ```
+   - Permessi: assegna **Modify** all’identity del pool applicativo sulla cartella `storage/` (database SQLite) e **Read** sul resto del progetto.
 4) **Permessi**: verifica che l’utente PHP possa creare/leggere/scrivere `storage/database.sqlite`. In ambienti con SELinux/AppArmor potrebbe servire un contesto dedicato.
 
 ### Aggiornamenti
