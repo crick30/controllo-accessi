@@ -6,6 +6,7 @@ use Domain\Repositories\VisitRepository;
 use Domain\Services\AccessControlService;
 use Domain\Services\VisitService;
 use Infrastructure\Database;
+use Infrastructure\Logger;
 
 require __DIR__ . '/helpers.php';
 
@@ -15,13 +16,16 @@ $config = require __DIR__ . '/../bootstrap.php';
 $db = new Database($config);
 $pdo = $db->pdo();
 
+$logger = new Logger($config->logPath, $config->logLevel);
+
 $accessControl = new AccessControlService($config);
 $auditLogger = new AuditLogRepository($pdo);
 $visitService = new VisitService(
     new VisitRepository($pdo),
     $auditLogger,
     $config->appUser,
-    $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+    $logger
 );
 
 $filters = [
@@ -46,6 +50,13 @@ $errors = [];
 $successMessage = '';
 $exitGreeting = '';
 
+$logger->debug('Richiesta applicativa', [
+    'view' => $view,
+    'method' => $_SERVER['REQUEST_METHOD'] ?? 'CLI',
+    'performed_by' => $performedBy,
+    'ip' => $ipAddress,
+]);
+
 if (!$config->isLocal() && !$accessControl->canViewActiveList()) {
     $filters = ['search' => '', 'from' => '', 'to' => ''];
 }
@@ -64,8 +75,21 @@ if (isPost($_SERVER)) {
         }
     } catch (\InvalidArgumentException $e) {
         $errors[] = $e->getMessage();
+        $logger->warning('Errore di validazione dati', [
+            'message' => $e->getMessage(),
+            'form_type' => $_POST['form_type'] ?? 'unknown',
+            'performed_by' => $performedBy,
+            'ip' => $ipAddress,
+        ]);
     } catch (\Throwable $e) {
         $errors[] = 'Errore inatteso: ' . $e->getMessage();
+        $logger->error('Errore inatteso nell\'applicazione', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'performed_by' => $performedBy,
+            'ip' => $ipAddress,
+        ]);
     }
 }
 
