@@ -88,14 +88,13 @@ if (isPost($_SERVER)) {
 $activeVisits = $accessControl->canViewActiveList() ? $visitService->activeVisits($filters) : [];
 $auditLogs = $accessControl->canViewAuditLogs() ? $auditLogger->latest() : [];
 $historyVisits = $accessControl->canViewHistory() ? $visitService->historyVisits($historyFilters) : [];
+$previewHistory = $visitService->historyVisits($historyFilters);
 $activeCount = count($activeVisits);
 $today = date('Y-m-d');
-$recentExits = $accessControl->canViewHistory()
-    ? array_values(array_filter(
-        $historyVisits,
-        fn($visit) => !empty($visit['exit_time']) && str_starts_with($visit['exit_time'], $today)
-    ))
-    : [];
+$recentExits = array_values(array_filter(
+    $previewHistory,
+    fn($visit) => !empty($visit['exit_time']) && str_starts_with($visit['exit_time'], $today)
+));
 
 if ($accessControl->canViewActiveList() && isset($_GET['export']) && $_GET['export'] === 'active_csv') {
     $auditLogger->log(null, 'Export lista presenti', 'Records: ' . count($activeVisits), $performedBy, $ipAddress);
@@ -364,9 +363,7 @@ if ($view === 'audit' && $canViewAudit) {
                             </div>
                             <span class="concept-badge">Ultimi 5 usciti</span>
                         </div>
-                        <?php if (!$canViewHistory): ?>
-                            <div class="text-muted small">Accesso allo storico consentito solo a operatori o admin autorizzati.</div>
-                        <?php elseif (count($recentExits) > 0): ?>
+                        <?php if (count($recentExits) > 0): ?>
                             <ul class="concept-mini-timeline">
                                 <?php foreach ($recentExits as $visit): ?>
                                     <li>
